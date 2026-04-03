@@ -1,5 +1,6 @@
 <script>
-  import { register } from '/lib.js'
+  // 1. Import dari $lib/auth.js sesuai pesanan
+  import { register } from '$lib/auth.js'
   import { goto } from '$app/navigation'
 
   let email = ''
@@ -14,41 +15,40 @@
     error = ''
     success = ''
 
-    // Validate
+    // Validasi santai
     if (!email || !password || !username) {
-      error = 'Please fill all fields'
+      error = 'Waduh, diisi semua dulu dong bosqu!'
       loading = false
       return
     }
 
     if (password.length < 6) {
-      error = 'Password must be at least 6 characters'
+      error = 'Password minimal 6 karakter ya, biar aman 🐱‍💻'
       loading = false
       return
     }
 
     try {
-      // Register using lib.js
-      const user = await register(email, password, username)
+      // 2. Panggil API register baru. Token & Session otomatis kesimpan di auth.js
+      const data = await register(email, password, username)
 
-      success = `Welcome ${user.username || email}! Redirecting...`
+      // Ambil username dari respons (kalau ada) buat disapa
+      const greetedName = data?.user?.user_metadata?.username || username
+      success = `Mantap! Welcome ${greetedName}! Otw masuk... 🚀`
       
-      // Token automatically saved to localStorage by lib.js
-      // User automatically saved to localStorage by lib.js
-      
-      // Redirect after 1 second
+      // Gaskeun ke halaman utama setelah 1 detik
       setTimeout(() => {
         goto('/')
       }, 1000)
     } catch (err) {
-      error = err.message || 'Registration failed'
+      error = err.message || 'Gagal daftar nih, coba lagi ya!'
       console.error('Register error:', err)
     } finally {
       loading = false
     }
   }
 
-  // Allow enter key to submit
+  // Biar user bisa tekan Enter buat submit
   function handleKeydown(e) {
     if (e.key === 'Enter' && !loading) {
       handleRegister()
@@ -56,141 +56,233 @@
   }
 </script>
 
-<h2>Create Account</h2>
+<div class="register-container">
+  <div class="card">
+    <h2>Join Skena</h2>
+    <p class="subtitle">Bikin akun dulu biar bisa pamer package.</p>
 
-<div class="form">
-  <input
-    bind:value={email}
-    type="email"
-    placeholder="Email"
-    disabled={loading}
-    on:keydown={handleKeydown}
-  />
-  
-  <input
-    bind:value={username}
-    type="text"
-    placeholder="Username"
-    disabled={loading}
-    on:keydown={handleKeydown}
-  />
-  
-  <input
-    bind:value={password}
-    type="password"
-    placeholder="Password (min 6 chars)"
-    disabled={loading}
-    on:keydown={handleKeydown}
-  />
+    <div class="form">
+      <div class="input-group">
+        <input
+          bind:value={email}
+          type="email"
+          placeholder="Email"
+          disabled={loading}
+          on:keydown={handleKeydown}
+        />
+      </div>
+      
+      <div class="input-group">
+        <input
+          bind:value={username}
+          type="text"
+          placeholder="Username"
+          disabled={loading}
+          on:keydown={handleKeydown}
+        />
+      </div>
+      
+      <div class="input-group">
+        <input
+          bind:value={password}
+          type="password"
+          placeholder="Password (min 6 chars)"
+          disabled={loading}
+          on:keydown={handleKeydown}
+        />
+      </div>
 
-  <button on:click={handleRegister} disabled={loading}>
-    {loading ? '⏳ Creating account...' : '✨ Register'}
-  </button>
+      {#if error}
+        <div class="alert error-alert">
+          <span>⚠️</span> {error}
+        </div>
+      {/if}
 
-  {#if error}
-    <p class="error">❌ {error}</p>
-  {/if}
+      {#if success}
+        <div class="alert success-alert">
+          <span>✅</span> {success}
+        </div>
+      {/if}
 
-  {#if success}
-    <p class="success">✅ {success}</p>
-  {/if}
+      <button on:click={handleRegister} disabled={loading} class="btn-primary">
+        {#if loading}
+          <span class="spinner"></span> Memproses...
+        {:else}
+          ✨ Register
+        {/if}
+      </button>
 
-  <p class="link">
-    Already have an account? <a href="/login">Login here</a>
-  </p>
+      <p class="link">
+        Udah punya jalur ordal? <a href="/login">Login di sini bang</a>
+      </p>
+    </div>
+  </div>
 </div>
 
 <style>
+  /* =========================================
+     MATERIAL 3 DARK MODE STYLING 
+     ========================================= */
+  
+  /* Reset background body khusus untuk rute ini (opsional kalau belum diset global) */
+  :global(body) {
+    background-color: #121212; 
+    color: #e3e3e3;
+    font-family: 'Inter', Roboto, sans-serif;
+    margin: 0;
+  }
+
+  .register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .card {
+    background: #1e1e1e; /* M3 Surface Dark */
+    border-radius: 24px; /* Sudut melengkung khas M3 */
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
   h2 {
-    margin-bottom: 20px;
-    color: #333;
+    margin: 0 0 8px 0;
+    color: #e3e3e3;
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #a0a0a0;
+    font-size: 15px;
+    margin-bottom: 32px;
   }
 
   .form {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 20px;
-    max-width: 400px;
-    margin: 0 auto;
-    background: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    gap: 16px;
   }
 
-  input {
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-    transition: border-color 0.2s;
+  .input-group input {
+    width: 100%;
+    padding: 16px;
+    background: #2c2c2c; /* M3 Surface Container Highest */
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #e3e3e3;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
   }
 
-  input:focus {
+  .input-group input:focus {
     outline: none;
-    border-color: #4CAF50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    border-color: #bb86fc; /* M3 Primary Dark */
+    background: #333333;
+    box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.15);
   }
 
-  input:disabled {
-    background-color: #f0f0f0;
+  .input-group input::placeholder {
+    color: #888;
+  }
+
+  .input-group input:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
-  button {
-    padding: 12px;
-    background-color: #4CAF50;
-    color: white;
+  .btn-primary {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    background-color: #bb86fc; /* M3 Primary Dark */
+    color: #121212; /* M3 On Primary */
     border: none;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 100px; /* Pill shape khas M3 Button */
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
+    margin-top: 12px;
   }
 
-  button:hover:not(:disabled) {
-    background-color: #45a049;
+  .btn-primary:hover:not(:disabled) {
+    background-color: #d0bcff;
+    transform: translateY(-1px);
   }
 
-  button:disabled {
-    background-color: #ccc;
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-primary:disabled {
+    background-color: #444;
+    color: #888;
     cursor: not-allowed;
   }
 
-  .error {
-    color: #d32f2f;
-    font-size: 13px;
-    padding: 10px;
-    background-color: #ffebee;
-    border-radius: 4px;
-    margin: 0;
+  .alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
   }
 
-  .success {
-    color: #388e3c;
-    font-size: 13px;
-    padding: 10px;
-    background-color: #e8f5e9;
-    border-radius: 4px;
-    margin: 0;
+  .error-alert {
+    background-color: rgba(207, 102, 121, 0.1);
+    color: #cf6679; /* M3 Error Dark */
+    border: 1px solid rgba(207, 102, 121, 0.2);
+  }
+
+  .success-alert {
+    background-color: rgba(129, 201, 149, 0.1);
+    color: #81c995;
+    border: 1px solid rgba(129, 201, 149, 0.2);
   }
 
   .link {
     text-align: center;
-    font-size: 13px;
-    color: #666;
-    margin: 0;
+    font-size: 14px;
+    color: #a0a0a0;
+    margin-top: 16px;
   }
 
   .link a {
-    color: #4CAF50;
+    color: #bb86fc;
     text-decoration: none;
     font-weight: 600;
+    transition: color 0.2s;
   }
 
   .link a:hover {
+    color: #d0bcff;
     text-decoration: underline;
+  }
+
+  /* Animasi Spinner Loading ⏳ */
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 3px solid rgba(18, 18, 18, 0.3);
+    border-top-color: #121212;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 </style>

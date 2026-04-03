@@ -101,7 +101,7 @@
     {/if}
 
     <p class="register-link">
-      New here? <a href="/register">Create an account</a>
+      New here? <a href="/auth/register">Create an account</a>
     </p>
   </div>
 </div>
