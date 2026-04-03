@@ -1,0 +1,650 @@
+/* ==========================================================================
+   NEON BRUTALIST UI — UNIFIED DESIGN SYSTEM
+   ========================================================================== */
+
+:root {
+  /* --- PALETTE UTAMA (Neon Brutalist) --- */
+  --color-primary: #B388FF;       /* Ungu nyala */
+  --color-secondary: #FF5252;     /* Merah muda/Pinkish */
+  --color-tertiary: #18FFFF;      /* Cyan seger */
+  --color-error: #FF1744;         /* Merah error */
+  --color-surface: #121212;       /* Abu-abu gelap buat card */
+  --color-base: #000000;          /* Hitam pekat buat background */
+
+  /* --- TEXT & BORDERS --- */
+  --color-text-main: #FFFFFF;
+  --color-text-dim: #A0A0A0;
+  --color-border: #333333;
+
+  /* --- TYPOGRAPHY --- */
+  --font-display: 'DM Sans', sans-serif;   /* Heading & elemen brutalist */
+  --font-body: 'Inter', sans-serif;         /* Teks bacaan biasa */
+  --font-mono: 'JetBrains Mono', monospace; /* Kode/token */
+
+  /* --- MATERIAL YOU DARK LAYER (sub-palette, no conflict) --- */
+  --mat-bg-surface: #1c1b1f;
+  --mat-on-surface: #e6e1e5;
+  --mat-primary-container: #4f378b;
+  --mat-on-primary-container: #eaddff;
+  --mat-surface-variant: #49454f;
+  --mat-outline: #938f99;
+  --mat-link: #d0bcff;
+  --mat-indicator: #bfa2ff;
+
+  /* --- ALIAS (backward compat untuk class yang pakai --c-*) --- */
+  --c-primary: var(--color-primary);
+  --c-text-dim: var(--color-text-dim);
+}
+
+
+/* ==========================================================================
+   1. RESET & BASE
+   ========================================================================== */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+body {
+  background-color: var(--color-base);
+  color: var(--color-text-main);
+  font-family: var(--font-body);
+  margin: 0;
+  padding: 0 0 80px; /* Space buat bottom nav */
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-size: 100%;
+  font-weight: normal;
+  letter-spacing: 1px;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+
+/* ==========================================================================
+   2. BUTTONS
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  font-family: var(--font-display);
+  font-weight: bold;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-base);
+}
+
+.btn-critical {
+  background-color: var(--color-secondary);
+  color: var(--color-base);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-outline-dim {
+  background-color: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text-main);
+}
+
+
+/* ==========================================================================
+   3. CARDS
+   ========================================================================== */
+
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+}
+
+.card-title {
+  font-size: 16px;
+  color: var(--color-text-dim);
+  margin: 0;
+}
+
+
+/* ==========================================================================
+   4. LISTS
+   ========================================================================== */
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+
+/* ==========================================================================
+   5. NAVBAR
+   ========================================================================== */
+
+.navbar-bottom {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: var(--color-base);
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--color-text-dim);
+  font-size: 10px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  text-decoration: none;
+  gap: 4px;
+}
+
+.nav-item.active {
+  color: var(--color-secondary);
+}
+
+
+/* ==========================================================================
+   6. BADGES
+   ========================================================================== */
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.badge-stable      { background-color: var(--color-primary);   color: var(--color-base); }
+.badge-beta        { background-color: var(--color-tertiary);  color: var(--color-base); }
+.badge-deprecated  { background-color: var(--color-secondary); color: var(--color-base); }
+.badge-experimental { border: 1px solid var(--color-text-dim); color: var(--color-text-dim); }
+
+
+/* ==========================================================================
+   7. FORMS & DATA ENTRY
+   ========================================================================== */
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.input-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  margin-bottom: 8px;
+}
+
+.input-field {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.input-with-icon {
+  background-image: url('data:image/svg+xml;utf8,...');
+  background-repeat: no-repeat;
+  background-position: 12px center;
+  padding-left: 40px;
+}
+
+.toggle-switch {
+  appearance: none;
+  width: 40px;
+  height: 20px;
+  background-color: var(--color-border);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--color-text-dim);
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.toggle-switch:checked {
+  background-color: var(--color-primary);
+}
+
+.toggle-switch:checked::after {
+  left: calc(100% - 2px);
+  transform: translateX(-100%);
+  background-color: var(--color-base);
+}
+
+
+/* ==========================================================================
+   8. APP HEADER & LOGO
+   ========================================================================== */
+
+.app-header {
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -1px;
+}
+
+.logo span {
+  color: var(--color-primary);
+}
+
+
+/* ==========================================================================
+   9. TABS
+   ========================================================================== */
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+  overflow-x: auto;
+  padding: 0 20px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-dim);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab-btn.active {
+  background: var(--color-primary);
+  color: var(--color-base);
+  border-color: var(--color-primary);
+  font-weight: bold;
+}
+
+
+/* ==========================================================================
+   10. MOLECULE COMPONENTS (mol-*)
+   ========================================================================== */
+
+.mol-grid {
+  padding: 0 20px;
+}
+
+.mol-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.mol-card:active {
+  transform: scale(0.98);
+}
+
+.mol-title {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: var(--color-text-main);
+}
+
+.mol-title span {
+  color: var(--color-text-dim);
+}
+
+.mol-desc {
+  font-size: 13px;
+  color: var(--color-text-dim);
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mol-stats {
+  display: flex;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+
+/* ==========================================================================
+   11. BOXY INPUT COMPONENTS
+   ========================================================================== */
+
+.boxy-input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  background-color: var(--color-surface);
+  border-radius: 0;
+  padding: 12px 16px;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+
+.boxy-elevated {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.boxy-elevated:focus-within {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7);
+}
+
+.boxy-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  margin-bottom: 8px;
+}
+
+.boxy-text-input {
+  background-color: transparent;
+  border: none;
+  color: var(--color-text-main);
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  width: 100%;
+  box-sizing: border-box;
+  cursor: text;
+}
+
+.boxy-file-drop {
+  position: relative;
+  background-color: var(--color-surface);
+  border-radius: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.2s;
+}
+
+.boxy-file-drop:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.boxy-file-drop:focus-within {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7);
+}
+
+.boxy-file-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+}
+
+
+/* ==========================================================================
+   12. TOPBAR & USER INFO (Material You style)
+   ========================================================================== */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--mat-bg-surface);
+  color: var(--mat-on-surface);
+  border-radius: 24px;
+  margin: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-container {
+  position: relative;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background-color: var(--mat-primary-container);
+  color: var(--mat-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.avatar.guest {
+  background-color: var(--mat-surface-variant);
+  color: var(--mat-outline);
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--mat-indicator);
+  border: 2px solid var(--mat-bg-surface);
+  border-radius: 50%;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: var(--mat-outline);
+  letter-spacing: 0.4px;
+}
+
+.email {
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--mat-link);
+  cursor: pointer;
+}
+
+.sub-link .material-icons {
+  font-size: 14px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--mat-on-surface);
+  padding: 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background-color: rgba(234, 221, 255, 0.08);
+}
+
+.icon-btn:active {
+  background-color: rgba(234, 221, 255, 0.15);
+}
+
+
+/* ==========================================================================
+   13. UTILITY COMPONENTS
+   ========================================================================== */
+
+.container {
+  padding: 16px;
+}
+
+.sub {
+  font-size: 12px;
+  color: var(--c-text-dim);
+}
+
+.rank {
+  font-size: 12px;
+  color: var(--c-primary);
+  margin: 8px 0 4px 4px;
+}
+
+.error {
+  color: red;
+}
+
+.empty {
+  text-align: center;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeLoop 1.2s infinite;
+}
+
+@keyframes fadeLoop {
+  0%   { opacity: 0.3; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
