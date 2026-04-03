@@ -1,6 +1,6 @@
 // src/lib/api.js
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = 'https//aipm-tawny.vercel.app'
 export const API_BASE = BASE_URL
 // =========================
 // 🔑 TOKEN MANAGEMENT
