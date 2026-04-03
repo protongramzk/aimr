@@ -5,7 +5,7 @@
   import TabView from '$lib/components/TabView.svelte';
   import { marked } from 'marked';
   import "$lib/leorpiomd.css";
-  import { API_BASE } from '$lib/api.js';
+  const API_BASE = "https://aipm-tawny.vercel.app"
 
   export let params;
 
