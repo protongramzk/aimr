@@ -18,7 +18,7 @@
   </div>
 
   <div class="mol-stats">
-<div class="stat-item" on:click={toggleStar} style="cursor: pointer;">
+<div class="stat-item" style="cursor: pointer;">
   <i class="material-icons">
     star
   </i>
