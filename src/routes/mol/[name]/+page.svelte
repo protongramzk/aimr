@@ -15,11 +15,11 @@ let path=[]
   let pkgData = null;
   let files = [];
   let readmeHtml = '';
-  let activeTab = 'files';
+  let activeTab = 'readme';
 
   const tabs = [
+    { label: 'Molecule Info', key: 'readme' },
     { label: 'Files', key: 'files' },
-    { label: 'README', key: 'readme' }
   ];
 
   // Fungsi helper untuk mencari file readme dari array tree yang baru
@@ -84,7 +84,7 @@ console.log(files)
 
     {#if activeTab === 'files'}
       <div style="padding:16px"><FileView
-  {files}
+  {files} pkg={params.name}
   {path}
   on:navigate={(e) => path = e.detail.path}
   on:open={(e) => console.log('OPEN FILE:', e.detail)}

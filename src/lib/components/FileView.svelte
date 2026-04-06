@@ -1,60 +1,191 @@
 <script>
-  /**
-   * @typedef {'file' | 'folder'} NodeType
-   * @typedef {{ name: string, type: NodeType, fileUrl: string | null, children: TreeNode[] }} TreeNode
-   * @typedef {{ tree: TreeNode[] }} FileTree
-   */
+  export let files = [];
+  export let pkg = "my-lib"; // 🔥 ganti sesuai package lu
 
-  /** @type {FileTree} */
-  export let files=[]
-  const data=files
+  const CDN = "https://ueiurduvhlcxgiwxniqb.supabase.co/functions/v1/cdn";
 
-  // Stack navigasi: [rootItems, folderAItems, folderBItems, ...]
   let stack = [files];
-
-  // History nama folder untuk breadcrumb
   let folderHistory = [];
+  let viewMode = "list";
 
-  let viewMode = 'list';
+  // 🧠 viewer state
+  let viewerOpen = false;
+  let viewerContent = "";
+  let viewerFile = "";
+  let viewerLang = "javascript";
 
-  // Items aktif = ujung stack
   $: items = stack[stack.length - 1];
+function buildPath(fileName) {
+  return [...folderHistory, fileName].join("/");
+}
+  // =====================
+  // 📡 FETCH FILE
+  // =====================
+ async function fetchFile(fullPath) {
+  try {
+    const res = await fetch(`${CDN}?pkg=${pkg}&atoms=${fullPath}`);
+    const json = await res.json();
 
-  const open = (/** @type {TreeNode} */ item) => {
-    if (item.type === 'folder') {
-      stack = [...stack, item.children];
-      folderHistory = [...folderHistory, item.name];
-    } else if (item.fileUrl) {
-      window.open(item.fileUrl, '_blank');
-    }
-  };
+    const url = json.files[fullPath];
 
-  const goBack = () => {
+    if (!url) throw new Error("File not found");
+
+    return await fetch(url).then(r => r.text());
+  } catch (err) {
+    console.error(err);
+    alert("Gagal load file 😢");
+    return "";
+  }
+}
+  // =====================
+  // 🧠 UTIL
+  // =====================
+  const getExt = (name) => name.split(".").pop().toLowerCase();
+
+  function mapLang(ext) {
+    const map = {
+      js: "javascript",
+      ts: "typescript",
+      py: "python",
+      json: "json",
+      html: "markup",
+      css: "css",
+      yaml: "yaml",
+      yml: "yaml",
+      md: "markdown"
+    };
+    return map[ext] || "javascript";
+  }
+
+  // =====================
+  // 🚀 OPEN FILE
+  // =====================
+ async function open(item) {
+  if (item.type === "folder") {
+    stack = [...stack, item.children];
+    folderHistory = [...folderHistory, item.name];
+    return;
+  }
+
+  const ext = getExt(item.name);
+
+  // 🔥 bikin full path
+  const fullPath = buildPath(item.name);
+
+  const content = await fetchFile(fullPath);
+
+  // 🎯 handler
+  if (ext === "md") return onMDOpen(content, item.name);
+  if (ext === "yaml" || ext === "yml") return onYAMLOpen(content, item.name);
+
+  // 💻 viewer
+  viewerContent = content;
+  viewerFile = fullPath; // 🔥 biar keliatan path asli
+  viewerLang = mapLang(ext);
+  viewerOpen = true;
+
+  tickHighlight();
+}
+  function onMDOpen(content, name) {
+    viewerContent = content;
+    viewerFile = name;
+    viewerLang = "markdown";
+    viewerOpen = true;
+    tickHighlight();
+  }
+
+  function onYAMLOpen(content, name) {
+    viewerContent = content;
+    viewerFile = name;
+    viewerLang = "yaml";
+    viewerOpen = true;
+    tickHighlight();
+  }
+
+  function tickHighlight() {
+    setTimeout(() => {
+      if (window.Prism) Prism.highlightAll();
+    }, 0);
+  }
+
+  // =====================
+  // 🎮 CONTROLS
+  // =====================
+  function closeViewer() {
+    viewerOpen = false;
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(viewerContent);
+    alert("Copied 🚀");
+  }
+
+  function downloadFile() {
+    const blob = new Blob([viewerContent], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = viewerFile;
+    a.click();
+  }
+
+  // =====================
+  // 📂 NAV
+  // =====================
+  function goBack() {
     if (stack.length > 1) {
       stack = stack.slice(0, -1);
       folderHistory = folderHistory.slice(0, -1);
     }
-  };
+  }
 
-  const goRoot = () => {
-    stack = [data.tree];
+  function goRoot() {
+    stack = [files];
     folderHistory = [];
-  };
+  }
 
-  const getPathNames = () => folderHistory;
-
-  const getFileIcon = (/** @type {string} */ fileName) => {
-    if (!fileName) return 'insert_drive_file';
-    const ext = fileName.split('.').pop().toLowerCase();
+  const getFileIcon = (fileName) => {
+    const ext = getExt(fileName);
     const map = {
-      ts: 'code', js: 'code',
-      md: 'description',
-      yaml: 'settings', yml: 'settings',
-      json: 'data_object',
+      ts: "code",
+      js: "code",
+      md: "description",
+      yaml: "settings",
+      yml: "settings",
+      json: "data_object"
     };
-    return map[ext] || 'insert_drive_file';
+    return map[ext] || "insert_drive_file";
   };
+let theme = "tomorrow";
+
+const THEMES = {
+  tomorrow: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css",
+  dark: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-okaidia.css",
+  light: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css",
+  funky: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-funky.css"
+};
+function setTheme(name) {
+  theme = name;
+
+  const id = "prism-theme";
+  let link = document.getElementById(id);
+
+  if (!link) {
+    link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+  }
+
+  link.href = THEMES[name];
+
+  tickHighlight();
+}
 </script>
+
+<!-- ===================== -->
+<!-- 📦 FILE MANAGER -->
+<!-- ===================== -->
+{#if !viewerOpen}
 <div class="wrapper">
   <div class="header">
     <div class="left">
@@ -66,25 +197,11 @@
 
       <div class="path">
         <span class="root" on:click={goRoot}>root</span>
-        {#each getPathNames() as part}
+        {#each folderHistory as part}
           <span class="sep">/</span>
           <span>{part}</span>
         {/each}
       </div>
-    </div>
-
-    <div class="view-toggle">
-      <button
-        class:active={viewMode === 'list'}
-        on:click={() => viewMode = 'list'}>
-        <span class="material-icons">view_list</span>
-      </button>
-
-      <button
-        class:active={viewMode === 'grid'}
-        on:click={() => viewMode = 'grid'}>
-        <span class="material-icons">grid_view</span>
-      </button>
     </div>
   </div>
 
@@ -92,31 +209,58 @@
     {#each items as item}
       <div class="item" on:click={() => open(item)}>
         <span class="material-icons icon">
-          {item.type === 'folder' ? 'folder' : getFileIcon(item.name)}
+          {item.type === "folder" ? "folder" : getFileIcon(item.name)}
         </span>
 
         <div class="meta">
           <div class="name">{item.name}</div>
-          {#if item.type === 'file' && viewMode === 'list'}
-            <div class="type">
-              {item.name.split('.').pop()} file
-            </div>
-          {/if}
         </div>
       </div>
     {/each}
-
-    {#if items.length === 0}
-      <div class="empty">
-        <span class="material-icons big">folder_open</span>
-        <p>Empty</p>
-      </div>
-    {/if}
   </div>
 </div>
+{/if}
+
+<!-- ===================== -->
+<!-- 💻 VIEWER -->
+<!-- ===================== -->
+{#if viewerOpen}
+<div class="viewer">
+ <div class="appbar">
+  <div class="left">
+    <button class="icon-btn red" on:click={closeViewer}>
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <div class="center">
+    <span class="file" title={viewerFile}>{viewerFile}</span>
+  </div>
+
+  <div class="right">
+    <button class="icon-btn" on:click={copyCode}>
+      <span class="material-icons">content_copy</span>
+    </button>
+
+    <button class="icon-btn" on:click={downloadFile}>
+      <span class="material-icons">download</span>
+    </button>
+
+    <select class="theme-select" on:change={(e) => setTheme(e.target.value)}>
+      {#each Object.keys(THEMES) as t}
+        <option value={t}>{t}</option>
+      {/each}
+    </select>
+  </div>
+</div>
+  <!-- 💻 CODE -->
+  <pre class="language-{viewerLang}">
+    <code>{viewerContent}</code>
+  </pre>
+</div>
+{/if}
 
 <style>
-  /* Style tetap sama seperti yang kamu buat, sudah solid! */
   .wrapper {
     background: #1c1b1f;
     color: #e6e1e5;
@@ -125,132 +269,155 @@
     overflow: hidden;
     max-width: 900px;
     margin: auto;
-    font-family: system-ui;
   }
+
   .header {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 16px;
+    padding: 12px;
     background: #25232a;
-    border-bottom: 1px solid #49454f;
   }
-  .left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+
   .icon-btn {
     background: transparent;
     border: none;
     color: #d0bcff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
   }
-  .path {
-    font-size: 13px;
-    color: #aaa;
+
+  .content {
+    padding: 10px;
   }
-  .root {
-    color: #d0bcff;
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .root:hover {
-    text-decoration: underline;
-  }
-  .sep {
-    margin: 0 6px;
-    opacity: 0.5;
-  }
-  .view-toggle {
-    display: flex;
-    background: #1c1b1f;
-    padding: 4px;
-    border-radius: 12px;
-  }
-  .view-toggle button {
-    background: transparent;
-    border: none;
-    color: #cac4d0;
-    padding: 6px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-  }
-  .view-toggle button.active {
-    background: #d0bcff;
-    color: #381e72;
-  }
-  .content.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
-    padding: 16px;
-  }
-  .content.list {
-    display: flex;
-    flex-direction: column;
-    padding: 8px;
-  }
+
   .item {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    gap: 10px;
     padding: 10px;
-    border-radius: 12px;
     cursor: pointer;
-    transition: 0.2s ease;
-    border: 1px solid transparent;
   }
-  .grid .item {
-    flex-direction: column;
-    text-align: center;
-    padding: 20px 10px;
-  }
+
   .item:hover {
-    background: rgba(208, 188, 255, 0.08);
-    border-color: #49454f;
+    background: rgba(208, 188, 255, 0.1);
   }
+
   .icon {
-    font-size: 28px;
     color: #d0bcff;
   }
-  .grid .icon {
-    font-size: 48px;
-  }
-  .meta {
+
+  /* ===================== */
+  /* 💻 VIEWER */
+  /* ===================== */
+  .viewer {
+    position: fixed;
+    inset: 0;
+    top:60px;
+    background: #1c1b1f;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    width: 100%;
   }
-  .name {
-    font-size: 13px;
-    word-break: break-all;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.appbar {
+  width:100%;
+  position: fixed;
+  bottom: 0;
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0px 0px;
+  background: #2b2930;
+  border-bottom: 1px solid #49454f;
+
+  overflow: hidden; /* 🔥 anti bocor */
+}
+
+/* kiri & kanan fix size */
+.left,
+.right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* tengah fleksibel */
+.center {
+  flex: 1;
+  min-width: 0; /* 🔥 WAJIB biar bisa truncate */
+  display: flex;
+  justify-content: center;
+}
+
+/* nama file */
+.file {
+  max-width: 100%;
+  font-size: 13px;
+  opacity: 0.85;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* tombol */
+.icon-btn {
+  background: #3a3840;
+  border: none;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #e6e1e5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: #4a4752;
+}
+
+/* close merah */
+.icon-btn.red {
+  background: #5c2b2b;
+  color: #ffb4ab;
+}
+
+.icon-btn.red:hover {
+  background: #7a3b3b;
+}
+
+/* select */
+.theme-select {
+  background: #3a3840;
+  border: none;
+  color: #e6e1e5;
+  padding: 5px 6px;
+  border-radius: 8px;
+  font-size: 12px;
+
+  max-width: 90px; /* 🔥 biar gak rakus tempat */
+}
+
+/* 📱 MOBILE MODE */
+@media (max-width: 600px) {
+  .theme-select {
+    display: none; /* 🔥 sembunyiin biar lega */
   }
-  .grid .name {
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+
+  .file {
+    font-size: 12px;
   }
-  .type {
-    font-size: 10px;
-    opacity: 0.5;
-    text-transform: uppercase;
+
+  .icon-btn {
+    padding: 5px;
   }
-  .empty {
-    text-align: center;
-    opacity: 0.4;
-    padding: 60px 20px;
-  }
-  .big {
-    font-size: 64px;
-    margin-bottom: 8px;
+}
+  pre {
+    flex: 1;
+    overflow: auto;
+    margin: 0;
+    padding: 16px;
   }
 </style>
 

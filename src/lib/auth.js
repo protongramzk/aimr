@@ -232,3 +232,28 @@ export async function getStar(pkgname) {
 export async function getSession() {
   return req('GET', '/auth/session')
 }
+// 🔄 AUTO REFRESH TOKEN
+export async function refreshToken() {
+  try {
+    // panggil backend
+    const res = await fetch(`${BASE_URL}/refresh-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: getUserId() }) // optional, tergantung backend
+    })
+
+    const data = await res.json()
+    
+    if (data.access_token && data.refresh_token) {
+      // update localStorage biar token selalu fresh
+      localStorage.setItem('aipm_token', data.access_token)
+      localStorage.setItem('aipm_refresh', data.refresh_token)
+      return true
+    }
+
+    return false
+  } catch (err) {
+    console.warn('Refresh token gagal:', err.message)
+    return false
+  }
+}

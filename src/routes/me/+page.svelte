@@ -174,7 +174,7 @@
       </div>
       <div class="me-key-raw">
         <code>{newKeyResult.key.key}</code>
-        <button class="icon-btn" title="Salin" on:click={() => copyToClipboard(newKeyResult.key)}>
+        <button class="icon-btn" title="Salin" on:click={() => copyToClipboard(newKeyResult.key.key)}>
           <span class="material-icons" style="font-size:18px">content_copy</span>
         </button>
       </div>
