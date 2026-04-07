@@ -46,7 +46,7 @@
   $: navItems = [
     { label: 'Home', href: '/', icon: 'home' },
     user
-      ? { label: 'Profile', href: '/me', icon: 'person' }
+      ? { label: 'Profile', href: '/me', icon: 'article' }
       : { label: 'Login', href: '/auth/login', icon: 'login' },
     { label: 'Settings', href: '/settings', icon: 'settings' }
   ];
@@ -64,11 +64,8 @@
     <span class="material-icons dock-icon">vertical_split</span>
   </button>
 
-  <div class="brand">AIPM</div>
+  <div class="brand">atomol</div>
 
-  <button class="icon-btn right">
-    <span class="material-icons">account_circle</span>
-  </button>
 </div>
   <!-- 🌫 Overlay -->
   {#if $sidebarOpen}

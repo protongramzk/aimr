@@ -277,9 +277,6 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
 }
 
-.input-field:focus {
-  border-color: var(--color-primary);
-}
 
 .input-with-icon {
   padding-left: 40px;
