@@ -5,10 +5,9 @@
   import FileView from '$lib/components/FileView.svelte';
   import TabView from '$lib/components/TabView.svelte';
   import { marked } from 'marked';
+  import { getPackageDetail } from '$lib/auth';
   import { userStore } from '$lib/stores/user.svelte';
   import "$lib/leorpiomd.css";
-
-  const API_BASE = "https://aipm-tawny.vercel.app";
 
   let loading = $state(true);
   let error = $state('');
@@ -31,15 +30,9 @@
   }
 
   onMount(async () => {
-    const name = $page.params.name;
+    const name = $page.params.name as string;
     try {
-      const response = await fetch(`${API_BASE}/mol/${name}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch data: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await getPackageDetail(name);
       pkgData = data;
       files = data.tree || [];
 

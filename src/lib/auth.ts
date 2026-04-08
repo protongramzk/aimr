@@ -26,6 +26,21 @@ function decodeJWT(token: string): any {
   }
 }
 
+/**
+ * Checks if the current token is expired or close to expiring
+ */
+export function isTokenExpired(): boolean {
+  const token = localStorage.getItem('aipm_token')
+  if (!token) return true
+
+  const decoded = decodeJWT(token)
+  if (!decoded || !decoded.exp) return true
+
+  // Buffer of 60 seconds
+  const now = Math.floor(Date.now() / 1000)
+  return decoded.exp < (now + 60)
+}
+
 // ─────────────────────────────────────────
 // 💾 STORAGE HELPERS
 // ─────────────────────────────────────────
@@ -57,10 +72,56 @@ function clearSession(): void {
 }
 
 // ─────────────────────────────────────────
+// 🔄 AUTO REFRESH TOKEN
+// ─────────────────────────────────────────
+let refreshingPromise: Promise<boolean> | null = null;
+
+export async function refreshToken(): Promise<boolean> {
+  // If already refreshing, return the same promise to avoid multiple calls
+  if (refreshingPromise) return refreshingPromise;
+
+  refreshingPromise = (async () => {
+    const refresh_token = localStorage.getItem('aipm_refresh')
+    if (!refresh_token) return false
+
+    try {
+      const res = await fetch(`${BASE_URL}/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token })
+      })
+
+      const data = await res.json()
+
+      if (data.access_token && data.refresh_token) {
+        localStorage.setItem('aipm_token', data.access_token)
+        localStorage.setItem('aipm_refresh', data.refresh_token)
+        return true
+      }
+
+      return false
+    } catch (err: any) {
+      console.warn('Refresh token failed:', err.message)
+      return false
+    } finally {
+      refreshingPromise = null;
+    }
+  })();
+
+  return refreshingPromise;
+}
+
+// ─────────────────────────────────────────
 // 🌐 BASE REQUEST
 // ─────────────────────────────────────────
-async function req(method: string, path: string, body?: any): Promise<any> {
-  const token = localStorage.getItem('aipm_token')
+async function req(method: string, path: string, body?: any, retry = true): Promise<any> {
+  // 1. Proactive Refresh
+  if (isLoggedIn() && isTokenExpired()) {
+    console.log('Token expiring soon, refreshing proactively...')
+    await refreshToken()
+  }
+
+  let token = localStorage.getItem('aipm_token')
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -82,9 +143,14 @@ async function req(method: string, path: string, body?: any): Promise<any> {
   } catch {}
 
   if (!res.ok) {
-    if (res.status === 401) {
-      console.warn('⚠️ Unauthorized (token might be invalid)')
-      return { error: 'unauthorized' }
+    // 2. Reactive Refresh (401 Unauthorized)
+    if (res.status === 401 && retry) {
+      console.warn('⚠️ Unauthorized. Attempting reactive refresh...')
+      const refreshed = await refreshToken()
+      if (refreshed) {
+        // Retry the request exactly once
+        return req(method, path, body, false)
+      }
     }
 
     throw new Error(data?.error || `HTTP ${res.status}`)
@@ -157,9 +223,9 @@ export async function getMe(): Promise<User | null> {
   }
 
   try {
-    // Send ID directly without token
-    const res = await fetch(`${BASE_URL}/u/${userId}`)
-    const data = await res.json()
+    // We use req instead of direct fetch to benefit from auto-refresh if needed
+    // (Though /u/:id doesn't strictly need auth in the API docs, it's safer)
+    const data = await req('GET', `/u/${userId}`)
 
     if (data?.user) {
       localStorage.setItem('aipm_user', JSON.stringify(data.user))
@@ -234,28 +300,4 @@ export async function getStar(pkgname: string): Promise<any> {
 // ─────────────────────────────────────────
 export async function getSession(): Promise<any> {
   return req('GET', '/auth/session')
-}
-
-// 🔄 AUTO REFRESH TOKEN
-export async function refreshToken(): Promise<boolean> {
-  try {
-    const res = await fetch(`${BASE_URL}/refresh-token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: getUserId() })
-    })
-
-    const data = await res.json()
-    
-    if (data.access_token && data.refresh_token) {
-      localStorage.setItem('aipm_token', data.access_token)
-      localStorage.setItem('aipm_refresh', data.refresh_token)
-      return true
-    }
-
-    return false
-  } catch (err: any) {
-    console.warn('Refresh token failed:', err.message)
-    return false
-  }
 }
