@@ -277,12 +277,13 @@
 </div>
 {/if}
 
+
 <style>
   .wrapper {
-    background: #1c1b1f;
-    color: #e6e1e5;
+    background: var(--color-surface);
+    color: var(--color-text-main);
     border-radius: 20px;
-    border: 1px solid #49454f;
+    border: 1px solid var(--color-border);
     overflow: hidden;
     max-width: 900px;
     margin: auto;
@@ -290,7 +291,7 @@
 
   .header {
     padding: 12px;
-    background: #25232a;
+    background: var(--color-surface-2);
   }
 
   .path {
@@ -313,8 +314,18 @@
   .icon-btn {
     background: transparent;
     border: none;
-    color: #d0bcff;
+    color: var(--color-accent);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .icon-btn:hover {
+    background: color-mix(in srgb, var(--color-accent), transparent 90%);
   }
 
   .content {
@@ -327,14 +338,20 @@
     padding: 10px;
     cursor: pointer;
     align-items: center;
+    border-radius: 8px;
+    transition: background 0.2s;
   }
 
   .item:hover {
-    background: rgba(208, 188, 255, 0.1);
+    background: color-mix(in srgb, var(--color-accent), transparent 90%);
   }
 
   .icon {
-    color: #d0bcff;
+    color: var(--color-accent);
+  }
+
+  .name {
+    font-size: 14px;
   }
 
   /* ===================== */
@@ -343,15 +360,15 @@
   .viewer {
     position: fixed;
     inset: 0;
-    top:60px;
-    background: #1c1b1f;
+    top: 60px;
+    background: var(--color-base);
     display: flex;
     flex-direction: column;
     z-index: 200;
   }
 
   .appbar-viewer {
-    width:100%;
+    width: 100%;
     position: fixed;
     bottom: 0;
     z-index: 10;
@@ -359,8 +376,8 @@
     align-items: center;
     gap: 8px;
     padding: 8px;
-    background: #2b2930;
-    border-top: 1px solid #49454f;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
   }
 
   .left, .right {
@@ -384,38 +401,34 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #e6e1e5;
+    color: var(--color-text-main);
   }
 
-  .icon-btn {
-    background: #3a3840;
-    border: none;
+  .appbar-viewer .icon-btn {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
     padding: 6px;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #e6e1e5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: var(--color-accent);
   }
 
-  .icon-btn:hover {
-    background: #4a4752;
+  .appbar-viewer .icon-btn:hover {
+    background: var(--color-border);
   }
 
   .icon-btn.red {
-    background: #5c2b2b;
-    color: #ffb4ab;
+    background: color-mix(in srgb, var(--color-error), transparent 80%);
+    color: var(--color-error);
   }
 
   .icon-btn.red:hover {
-    background: #7a3b3b;
+    background: var(--color-error);
+    color: white;
   }
 
   .theme-select {
-    background: #3a3840;
-    border: none;
-    color: #e6e1e5;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-main);
     padding: 5px 6px;
     border-radius: 8px;
     font-size: 12px;
@@ -433,6 +446,6 @@
     overflow: auto;
     margin: 0;
     padding: 16px;
-    background: #1c1b1f !important;
+    background: var(--color-base) !important;
   }
 </style>
