@@ -1,23 +1,11 @@
+import { getToken as getAuthToken, refreshToken, isLoggedIn, isTokenExpired } from './auth';
+
 const BASE_URL = 'https://aipm-tawny.vercel.app'
 export const API_BASE = BASE_URL
 
 // =========================
 // 🔑 TOKEN MANAGEMENT
 // =========================
-
-/**
- * Stores the JWT token in localStorage
- */
-export function setToken(token: string): void {
-  localStorage.setItem('token', token)
-}
-
-/**
- * Retrieves the JWT token from localStorage
- */
-export function getToken(): string | null {
-  return localStorage.getItem('token')
-}
 
 /**
  * Stores the API key in localStorage
@@ -33,14 +21,6 @@ export function getApiKey(): string | null {
   return localStorage.getItem('api_key')
 }
 
-/**
- * Clears all authentication data from localStorage
- */
-export function clearAuth(): void {
-  localStorage.removeItem('token')
-  localStorage.removeItem('api_key')
-}
-
 // =========================
 // 🚀 CORE FETCH WRAPPER
 // =========================
@@ -52,14 +32,19 @@ interface RequestOptions {
   apiKey?: boolean;
 }
 
-async function request(path: string, { method = 'GET', body, auth = false, apiKey = false }: RequestOptions = {}): Promise<any> {
+async function request(path: string, { method = 'GET', body, auth = false, apiKey = false }: RequestOptions = {}, retry = true): Promise<any> {
+  // Proactive Refresh for Auth
+  if (auth && isLoggedIn() && isTokenExpired()) {
+    await refreshToken()
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   }
 
   // Inject JWT
   if (auth) {
-    const token = getToken()
+    const token = getAuthToken()
     if (token) headers['Authorization'] = `Bearer ${token}`
   }
 
@@ -75,72 +60,23 @@ async function request(path: string, { method = 'GET', body, auth = false, apiKe
     body: body ? JSON.stringify(body) : undefined
   })
 
-  const data = await res.json()
+  let data: any = {}
+  try {
+    data = await res.json()
+  } catch {}
 
   if (!res.ok || data.success === false) {
-    throw new Error(data.error || 'Request failed')
+    // Reactive Refresh for Auth (401 Unauthorized)
+    if (res.status === 401 && auth && retry) {
+      const refreshed = await refreshToken()
+      if (refreshed) {
+        return request(path, { method, body, auth, apiKey }, false)
+      }
+    }
+    throw new Error(data.error || `Request failed with status ${res.status}`)
   }
 
   return data
-}
-
-// =========================
-// 🔐 AUTH
-// =========================
-
-export async function signup(data: any): Promise<any> {
-  return request('/auth/signup', {
-    method: 'POST',
-    body: data
-  })
-}
-
-export async function login(data: any): Promise<any> {
-  const res = await request('/auth/login', {
-    method: 'POST',
-    body: data
-  })
-
-  // Auto save token
-  if (res.session?.access_token) {
-    setToken(res.session.access_token)
-  }
-
-  return res
-}
-
-export function getMe(): Promise<any> {
-  return request('/auth/me', { auth: true })
-}
-
-// =========================
-// 🔑 API KEYS
-// =========================
-
-export async function createApiKey(name = 'default'): Promise<any> {
-  const res = await request('/api-keys/create', {
-    method: 'POST',
-    auth: true,
-    body: { name }
-  })
-
-  // Save directly for convenience
-  if (res.key) {
-    setApiKey(res.key)
-  }
-
-  return res
-}
-
-export function getApiKeys(): Promise<any> {
-  return request('/api-keys', { auth: true })
-}
-
-export function deleteApiKey(id: string): Promise<any> {
-  return request(`/api-keys/${id}`, {
-    method: 'DELETE',
-    auth: true
-  })
 }
 
 // =========================
@@ -199,7 +135,6 @@ export function createVersion(packageId: string, version: string): Promise<any> 
 // 📂 FILES
 // =========================
 
-// Multipart upload requires different handling
 export async function uploadFile(packageId: string, versionId: string, file: File): Promise<any> {
   const key = getApiKey()
 
