@@ -1,11 +1,22 @@
-// src/lib/auth.js
-
 const BASE_URL = 'https://aipm-tawny.vercel.app'
 
+export interface User {
+  id: string;
+  username: string;
+  email?: string;
+  [key: string]: any;
+}
+
+interface SessionData {
+  access_token?: string;
+  refresh_token?: string;
+  user?: User;
+}
+
 // ─────────────────────────────────────────
-// 🔓 JWT DECODE (PURE, TANPA LIB)
+// 🔓 JWT DECODE (PURE, NO LIB)
 // ─────────────────────────────────────────
-function decodeJWT(token) {
+function decodeJWT(token: string): any {
   try {
     const payload = token.split('.')[1]
     const decoded = JSON.parse(atob(payload))
@@ -15,16 +26,10 @@ function decodeJWT(token) {
   }
 }
 
-function getUserIdFromToken(token) {
-  const decoded = decodeJWT(token)
-  return decoded?.sub || null
-}
-
 // ─────────────────────────────────────────
 // 💾 STORAGE HELPERS
 // ─────────────────────────────────────────
-function saveSession({ access_token, refresh_token, user }) {
-  // ❌ gak wajib simpan token lagi
+function saveSession({ access_token, refresh_token, user }: SessionData): void {
   if (access_token) {
     localStorage.setItem('aipm_token', access_token)
   }
@@ -35,16 +40,16 @@ function saveSession({ access_token, refresh_token, user }) {
 
   if (user) {
     localStorage.setItem('aipm_user', JSON.stringify(user))
-
-    // 🔥 INI YANG PENTING
+    // Important: Store user ID separately
     localStorage.setItem('aipm_user_id', user.id)
   }
 }
-export function getUserId() {
+
+export function getUserId(): string | null {
   return localStorage.getItem('aipm_user_id')
 }
 
-function clearSession() {
+function clearSession(): void {
   localStorage.removeItem('aipm_token')
   localStorage.removeItem('aipm_refresh')
   localStorage.removeItem('aipm_user')
@@ -52,12 +57,12 @@ function clearSession() {
 }
 
 // ─────────────────────────────────────────
-// 🌐 BASE REQUEST (ANTI DRAMA)
+// 🌐 BASE REQUEST
 // ─────────────────────────────────────────
-async function req(method, path, body) {
+async function req(method: string, path: string, body?: any): Promise<any> {
   const token = localStorage.getItem('aipm_token')
 
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   }
 
@@ -71,14 +76,14 @@ async function req(method, path, body) {
     body: body ? JSON.stringify(body) : undefined,
   })
 
-  let data = {}
+  let data: any = {}
   try {
     data = await res.json()
   } catch {}
 
   if (!res.ok) {
     if (res.status === 401) {
-      console.warn('⚠️ Unauthorized (token mungkin invalid)')
+      console.warn('⚠️ Unauthorized (token might be invalid)')
       return { error: 'unauthorized' }
     }
 
@@ -91,7 +96,7 @@ async function req(method, path, body) {
 // ─────────────────────────────────────────
 // 🔐 LOGIN
 // ─────────────────────────────────────────
-export async function login(email, password) {
+export async function login(email: string, password: string): Promise<any> {
   const data = await req('POST', '/auth/login', { email, password })
 
   saveSession({
@@ -106,7 +111,7 @@ export async function login(email, password) {
 // ─────────────────────────────────────────
 // 📝 REGISTER
 // ─────────────────────────────────────────
-export async function register(email, password, username) {
+export async function register(email: string, password: string, username: string): Promise<any> {
   const data = await req('POST', '/auth/register', {
     email,
     password,
@@ -125,26 +130,25 @@ export async function register(email, password, username) {
 // ─────────────────────────────────────────
 // 🔓 LOGOUT
 // ─────────────────────────────────────────
-export function logout() {
+export function logout(): void {
   clearSession()
 }
 
 // ─────────────────────────────────────────
 // ✅ STATUS
 // ─────────────────────────────────────────
-export function isLoggedIn() {
+export function isLoggedIn(): boolean {
   return !!localStorage.getItem('aipm_token')
 }
 
-export function getToken() {
+export function getToken(): string | null {
   return localStorage.getItem('aipm_token')
 }
-
 
 // ─────────────────────────────────────────
 // 👤 GET ME (SMART + FALLBACK)
 // ─────────────────────────────────────────
-export async function getMe() {
+export async function getMe(): Promise<User | null> {
   const userId = getUserId()
   const cached = localStorage.getItem('aipm_user')
 
@@ -153,51 +157,50 @@ export async function getMe() {
   }
 
   try {
-    // 🔥 kirim ID langsung, tanpa token
+    // Send ID directly without token
     const res = await fetch(`${BASE_URL}/u/${userId}`)
-
     const data = await res.json()
 
     if (data?.user) {
       localStorage.setItem('aipm_user', JSON.stringify(data.user))
       return data.user
     }
-  } catch (err) {
+  } catch (err: any) {
     console.warn('getMe error:', err.message)
   }
 
-  // fallback ke cache
+  // Fallback to cache
   if (cached) {
     return JSON.parse(cached)
   }
 
-  // minimal identity
-  return { id: userId }
+  // Minimal identity
+  return { id: userId, username: 'Unknown' }
 }
 
 // ─────────────────────────────────────────
 // 🗝️ API KEYS
 // ─────────────────────────────────────────
-export async function getApiKeys() {
+export async function getApiKeys(): Promise<any> {
   return req('GET', '/api-keys')
 }
 
-export async function createApiKey(name = 'default') {
+export async function createApiKey(name = 'default'): Promise<any> {
   return req('POST', '/api-keys', { name })
 }
 
-export async function deleteApiKey(id) {
+export async function deleteApiKey(id: string): Promise<any> {
   return req('DELETE', `/api-keys/${id}`)
 }
 
-export async function renameApiKey(id, name) {
+export async function renameApiKey(id: string, name: string): Promise<any> {
   return req('PUT', `/api-keys/${id}`, { name })
 }
 
 // ─────────────────────────────────────────
 // 📦 PACKAGES
 // ─────────────────────────────────────────
-export async function getPackages({ type = 'feed', username } = {}) {
+export async function getPackages({ type = 'feed', username }: { type?: string, username?: string } = {}): Promise<any> {
   const params = new URLSearchParams({ type })
 
   if (type === 'user' && username) {
@@ -207,53 +210,52 @@ export async function getPackages({ type = 'feed', username } = {}) {
   return req('GET', `/packages?${params.toString()}`)
 }
 
-export async function getPackageDetail(name) {
+export async function getPackageDetail(name: string): Promise<any> {
   return req('GET', `/mol/${encodeURIComponent(name)}`)
 }
 
-export async function getTree(name) {
+export async function getTree(name: string): Promise<any> {
   return req('GET', `/tree/${encodeURIComponent(name)}`)
 }
 
 // ─────────────────────────────────────────
 // ⭐ STAR
 // ─────────────────────────────────────────
-export async function toggleStar(pkgname) {
+export async function toggleStar(pkgname: string): Promise<any> {
   return req('POST', `/star/${encodeURIComponent(pkgname)}`)
 }
 
-export async function getStar(pkgname) {
+export async function getStar(pkgname: string): Promise<any> {
   return req('GET', `/star/${encodeURIComponent(pkgname)}`)
 }
 
 // ─────────────────────────────────────────
 // 🧠 SESSION CHECK
 // ─────────────────────────────────────────
-export async function getSession() {
+export async function getSession(): Promise<any> {
   return req('GET', '/auth/session')
 }
+
 // 🔄 AUTO REFRESH TOKEN
-export async function refreshToken() {
+export async function refreshToken(): Promise<boolean> {
   try {
-    // panggil backend
     const res = await fetch(`${BASE_URL}/refresh-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: getUserId() }) // optional, tergantung backend
+      body: JSON.stringify({ userId: getUserId() })
     })
 
     const data = await res.json()
     
     if (data.access_token && data.refresh_token) {
-      // update localStorage biar token selalu fresh
       localStorage.setItem('aipm_token', data.access_token)
       localStorage.setItem('aipm_refresh', data.refresh_token)
       return true
     }
 
     return false
-  } catch (err) {
-    console.warn('Refresh token gagal:', err.message)
+  } catch (err: any) {
+    console.warn('Refresh token failed:', err.message)
     return false
   }
 }

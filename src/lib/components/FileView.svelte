@@ -1,49 +1,63 @@
-<script>
-  export let files = [];
-  export let pkg = "my-lib"; // 🔥 ganti sesuai package lu
+<script lang="ts">
+  import { onMount, tick } from 'svelte';
+
+  interface FileItem {
+    name: string;
+    type: 'file' | 'folder';
+    children?: FileItem[];
+  }
+
+  interface Props {
+    files: FileItem[];
+    pkg?: string;
+  }
+
+  let { files = [], pkg = "my-lib" }: Props = $props();
 
   const CDN = "https://ueiurduvhlcxgiwxniqb.supabase.co/functions/v1/cdn";
 
-  let stack = [files];
-  let folderHistory = [];
-  let viewMode = "list";
+  let stack = $state<FileItem[][]>([files]);
+  let folderHistory = $state<string[]>([]);
+  let viewMode = $state("list");
 
-  // 🧠 viewer state
-  let viewerOpen = false;
-  let viewerContent = "";
-  let viewerFile = "";
-  let viewerLang = "javascript";
+  // Viewer state
+  let viewerOpen = $state(false);
+  let viewerContent = $state("");
+  let viewerFile = $state("");
+  let viewerLang = $state("javascript");
 
-  $: items = stack[stack.length - 1];
-function buildPath(fileName) {
-  return [...folderHistory, fileName].join("/");
-}
+  let items = $derived(stack[stack.length - 1]);
+
+  function buildPath(fileName: string) {
+    return [...folderHistory, fileName].join("/");
+  }
+
   // =====================
   // 📡 FETCH FILE
   // =====================
- async function fetchFile(fullPath) {
-  try {
-    const res = await fetch(`${CDN}?pkg=${pkg}&atoms=${fullPath}`);
-    const json = await res.json();
+  async function fetchFile(fullPath: string) {
+    try {
+      const res = await fetch(`${CDN}?pkg=${pkg}&atoms=${fullPath}`);
+      const json = await res.json();
+      const url = json.files[fullPath];
 
-    const url = json.files[fullPath];
+      if (!url) throw new Error("File not found");
 
-    if (!url) throw new Error("File not found");
-
-    return await fetch(url).then(r => r.text());
-  } catch (err) {
-    console.error(err);
-    alert("Gagal load file 😢");
-    return "";
+      return await fetch(url).then(r => r.text());
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load file 😢");
+      return "";
+    }
   }
-}
+
   // =====================
   // 🧠 UTIL
   // =====================
-  const getExt = (name) => name.split(".").pop().toLowerCase();
+  const getExt = (name: string) => name.split(".").pop()?.toLowerCase() || '';
 
-  function mapLang(ext) {
-    const map = {
+  function mapLang(ext: string) {
+    const map: Record<string, string> = {
       js: "javascript",
       ts: "typescript",
       py: "python",
@@ -60,33 +74,31 @@ function buildPath(fileName) {
   // =====================
   // 🚀 OPEN FILE
   // =====================
- async function open(item) {
-  if (item.type === "folder") {
-    stack = [...stack, item.children];
-    folderHistory = [...folderHistory, item.name];
-    return;
+  async function open(item: FileItem) {
+    if (item.type === "folder") {
+      if (item.children) {
+        stack = [...stack, item.children];
+        folderHistory = [...folderHistory, item.name];
+      }
+      return;
+    }
+
+    const ext = getExt(item.name);
+    const fullPath = buildPath(item.name);
+    const content = await fetchFile(fullPath);
+
+    if (ext === "md") return onMDOpen(content, item.name);
+    if (ext === "yaml" || ext === "yml") return onYAMLOpen(content, item.name);
+
+    viewerContent = content;
+    viewerFile = fullPath;
+    viewerLang = mapLang(ext);
+    viewerOpen = true;
+
+    tickHighlight();
   }
 
-  const ext = getExt(item.name);
-
-  // 🔥 bikin full path
-  const fullPath = buildPath(item.name);
-
-  const content = await fetchFile(fullPath);
-
-  // 🎯 handler
-  if (ext === "md") return onMDOpen(content, item.name);
-  if (ext === "yaml" || ext === "yml") return onYAMLOpen(content, item.name);
-
-  // 💻 viewer
-  viewerContent = content;
-  viewerFile = fullPath; // 🔥 biar keliatan path asli
-  viewerLang = mapLang(ext);
-  viewerOpen = true;
-
-  tickHighlight();
-}
-  function onMDOpen(content, name) {
+  function onMDOpen(content: string, name: string) {
     viewerContent = content;
     viewerFile = name;
     viewerLang = "markdown";
@@ -94,7 +106,7 @@ function buildPath(fileName) {
     tickHighlight();
   }
 
-  function onYAMLOpen(content, name) {
+  function onYAMLOpen(content: string, name: string) {
     viewerContent = content;
     viewerFile = name;
     viewerLang = "yaml";
@@ -104,7 +116,8 @@ function buildPath(fileName) {
 
   function tickHighlight() {
     setTimeout(() => {
-      if (window.Prism) Prism.highlightAll();
+      // @ts-ignore
+      if (window.Prism) window.Prism.highlightAll();
     }, 0);
   }
 
@@ -143,9 +156,9 @@ function buildPath(fileName) {
     folderHistory = [];
   }
 
-  const getFileIcon = (fileName) => {
+  const getFileIcon = (fileName: string) => {
     const ext = getExt(fileName);
-    const map = {
+    const map: Record<string, string> = {
       ts: "code",
       js: "code",
       md: "description",
@@ -155,31 +168,35 @@ function buildPath(fileName) {
     };
     return map[ext] || "insert_drive_file";
   };
-let theme = "tomorrow";
 
-const THEMES = {
-  tomorrow: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css",
-  dark: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-okaidia.css",
-  light: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css",
-  funky: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-funky.css"
-};
-function setTheme(name) {
-  theme = name;
+  let prismTheme = $state("tomorrow");
 
-  const id = "prism-theme";
-  let link = document.getElementById(id);
+  const THEMES: Record<string, string> = {
+    tomorrow: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css",
+    dark: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-okaidia.css",
+    light: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css",
+    funky: "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-funky.css"
+  };
 
-  if (!link) {
-    link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
+  function setTheme(name: string) {
+    prismTheme = name;
+    const id = "prism-theme";
+    let link = document.getElementById(id) as HTMLLinkElement;
+
+    if (!link) {
+      link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+
+    link.href = THEMES[name];
+    tickHighlight();
   }
 
-  link.href = THEMES[name];
-
-  tickHighlight();
-}
+  onMount(() => {
+    setTheme("tomorrow");
+  });
 </script>
 
 <!-- ===================== -->
@@ -190,13 +207,13 @@ function setTheme(name) {
   <div class="header">
     <div class="left">
       {#if stack.length > 1}
-        <button on:click={goBack} class="icon-btn">
+        <button onclick={goBack} class="icon-btn">
           <span class="material-icons">arrow_back</span>
         </button>
       {/if}
 
       <div class="path">
-        <span class="root" on:click={goRoot}>root</span>
+        <span class="root" onclick={goRoot}>root</span>
         {#each folderHistory as part}
           <span class="sep">/</span>
           <span>{part}</span>
@@ -207,7 +224,7 @@ function setTheme(name) {
 
   <div class="content {viewMode}">
     {#each items as item}
-      <div class="item" on:click={() => open(item)}>
+      <div class="item" onclick={() => open(item)}>
         <span class="material-icons icon">
           {item.type === "folder" ? "folder" : getFileIcon(item.name)}
         </span>
@@ -226,9 +243,9 @@ function setTheme(name) {
 <!-- ===================== -->
 {#if viewerOpen}
 <div class="viewer">
- <div class="appbar">
+ <div class="appbar-viewer">
   <div class="left">
-    <button class="icon-btn red" on:click={closeViewer}>
+    <button class="icon-btn red" onclick={closeViewer}>
       <span class="material-icons">close</span>
     </button>
   </div>
@@ -238,17 +255,17 @@ function setTheme(name) {
   </div>
 
   <div class="right">
-    <button class="icon-btn" on:click={copyCode}>
+    <button class="icon-btn" onclick={copyCode}>
       <span class="material-icons">content_copy</span>
     </button>
 
-    <button class="icon-btn" on:click={downloadFile}>
+    <button class="icon-btn" onclick={downloadFile}>
       <span class="material-icons">download</span>
     </button>
 
-    <select class="theme-select" on:change={(e) => setTheme(e.target.value)}>
+    <select class="theme-select" onchange={(e) => setTheme((e.target as HTMLSelectElement).value)}>
       {#each Object.keys(THEMES) as t}
-        <option value={t}>{t}</option>
+        <option value={t} selected={prismTheme === t}>{t}</option>
       {/each}
     </select>
   </div>
@@ -276,10 +293,28 @@ function setTheme(name) {
     background: #25232a;
   }
 
+  .path {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+  }
+
+  .root {
+    cursor: pointer;
+    color: var(--color-primary);
+  }
+
+  .sep {
+    opacity: 0.5;
+  }
+
   .icon-btn {
     background: transparent;
     border: none;
     color: #d0bcff;
+    cursor: pointer;
   }
 
   .content {
@@ -291,6 +326,7 @@ function setTheme(name) {
     gap: 10px;
     padding: 10px;
     cursor: pointer;
+    align-items: center;
   }
 
   .item:hover {
@@ -311,113 +347,92 @@ function setTheme(name) {
     background: #1c1b1f;
     display: flex;
     flex-direction: column;
+    z-index: 200;
   }
-.appbar {
-  width:100%;
-  position: fixed;
-  bottom: 0;
-  z-index: 10;
 
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  .appbar-viewer {
+    width:100%;
+    position: fixed;
+    bottom: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: #2b2930;
+    border-top: 1px solid #49454f;
+  }
 
-  padding: 0px 0px;
-  background: #2b2930;
-  border-bottom: 1px solid #49454f;
+  .left, .right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
 
-  overflow: hidden; /* 🔥 anti bocor */
-}
-
-/* kiri & kanan fix size */
-.left,
-.right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-/* tengah fleksibel */
-.center {
-  flex: 1;
-  min-width: 0; /* 🔥 WAJIB biar bisa truncate */
-  display: flex;
-  justify-content: center;
-}
-
-/* nama file */
-.file {
-  max-width: 100%;
-  font-size: 13px;
-  opacity: 0.85;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* tombol */
-.icon-btn {
-  background: #3a3840;
-  border: none;
-  padding: 6px;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #e6e1e5;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex-shrink: 0;
-}
-
-.icon-btn:hover {
-  background: #4a4752;
-}
-
-/* close merah */
-.icon-btn.red {
-  background: #5c2b2b;
-  color: #ffb4ab;
-}
-
-.icon-btn.red:hover {
-  background: #7a3b3b;
-}
-
-/* select */
-.theme-select {
-  background: #3a3840;
-  border: none;
-  color: #e6e1e5;
-  padding: 5px 6px;
-  border-radius: 8px;
-  font-size: 12px;
-
-  max-width: 90px; /* 🔥 biar gak rakus tempat */
-}
-
-/* 📱 MOBILE MODE */
-@media (max-width: 600px) {
-  .theme-select {
-    display: none; /* 🔥 sembunyiin biar lega */
+  .center {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
   }
 
   .file {
-    font-size: 12px;
+    max-width: 100%;
+    font-size: 13px;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #e6e1e5;
   }
 
   .icon-btn {
-    padding: 5px;
+    background: #3a3840;
+    border: none;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #e6e1e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-}
+
+  .icon-btn:hover {
+    background: #4a4752;
+  }
+
+  .icon-btn.red {
+    background: #5c2b2b;
+    color: #ffb4ab;
+  }
+
+  .icon-btn.red:hover {
+    background: #7a3b3b;
+  }
+
+  .theme-select {
+    background: #3a3840;
+    border: none;
+    color: #e6e1e5;
+    padding: 5px 6px;
+    border-radius: 8px;
+    font-size: 12px;
+    max-width: 90px;
+  }
+
+  @media (max-width: 600px) {
+    .theme-select {
+      display: none;
+    }
+  }
+
   pre {
     flex: 1;
     overflow: auto;
     margin: 0;
     padding: 16px;
+    background: #1c1b1f !important;
   }
 </style>
-

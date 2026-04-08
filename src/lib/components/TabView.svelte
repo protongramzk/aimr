@@ -1,17 +1,23 @@
-<script>
-  import { createEventDispatcher } from 'svelte';
+<script lang="ts">
+  import type { Snippet } from 'svelte';
 
-  export let tabs = []; 
-  // format:
-  // [{ label: 'Feed', key: 'feed' }]
+  interface Tab {
+    label: string;
+    key: string;
+  }
 
-  export let active = tabs[0]?.key || '';
+  interface Props {
+    tabs: Tab[];
+    active: string;
+    onChange?: (key: string) => void;
+    children?: Snippet<[string]>;
+  }
 
-  const dispatch = createEventDispatcher();
+  let { tabs = [], active = $bindable(''), onChange, children }: Props = $props();
 
-  function selectTab(key) {
+  function selectTab(key: string) {
     active = key;
-    dispatch('change', { key });
+    if (onChange) onChange(key);
   }
 </script>
 
@@ -20,7 +26,7 @@
   {#each tabs as tab}
     <button
       class="tab-btn {active === tab.key ? 'active' : ''}"
-      on:click={() => selectTab(tab.key)}
+      onclick={() => selectTab(tab.key)}
     >
       {tab.label}
     </button>
@@ -29,5 +35,7 @@
 
 <!-- CONTENT -->
 <div class="tab-content">
-  <slot {active} />
+  {#if children}
+    {@render children(active)}
+  {/if}
 </div>

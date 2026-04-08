@@ -1,20 +1,15 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import TabView from '$lib/components/TabView.svelte';
   import MolCard from '$lib/components/MolCard.svelte';
+  import { getPackages, type User } from '$lib/auth';
+  import { userStore } from '$lib/stores/user.svelte';
 
-  import {
-    getMe,
-    getPackages,
-    isLoggedIn
-  } from '$lib/auth.js';
-
-  let loading = false;
-  let error = '';
-  let packages = [];
-  let currentUser = null;
-  let activeTab = 'feed';
+  let loading = $state(false);
+  let error = $state('');
+  let packages = $state<any[]>([]);
+  let activeTab = $state('feed');
 
   const tabs = [
     { label: 'Feed', key: 'feed' },
@@ -23,38 +18,18 @@
     { label: 'You', key: 'you' }
   ];
 
-  // 🎯 pusat logic
-  const TAB_CONFIG = {
+  const TAB_CONFIG: Record<string, { type: string, requireAuth?: boolean }> = {
     feed: { type: 'feed' },
     rank: { type: 'rank' },
-    stars: { type: 'stars' }, // nanti bisa beda endpoint
+    stars: { type: 'stars' },
     you: { type: 'user', requireAuth: true }
   };
 
-  // =========================
-  // 👤 USER
-  // =========================
-  async function fetchMe() {
-    if (!isLoggedIn()) return;
-
-    try {
-      const res = await getMe();
-      currentUser = res.user ?? res;
-    } catch {
-      currentUser = null;
-    }
-  }
-
-  // =========================
-  // 📦 FETCH CORE
-  // =========================
-  async function fetchPackagesByTab(tabKey) {
+  async function fetchPackagesByTab(tabKey: string) {
     const config = TAB_CONFIG[tabKey];
-
     if (!config) return;
 
-    // 🔐 auth check
-    if (config.requireAuth && !currentUser) {
+    if (config.requireAuth && !userStore.currentUser) {
       packages = [];
       return;
     }
@@ -63,17 +38,12 @@
     error = '';
 
     try {
-      let res;
-
-      // 🔥 unified request
-      res = await getPackages({
+      const res = await getPackages({
         type: config.type,
-        username: currentUser?.username
+        username: userStore.currentUser?.username
       });
-
       packages = res?.packages || [];
-
-    } catch (err) {
+    } catch (err: any) {
       error = err.message;
       packages = [];
     } finally {
@@ -81,65 +51,48 @@
     }
   }
 
-  // =========================
-  // 🔁 TAB CHANGE
-  // =========================
-  async function handleTabChange(e) {
-    activeTab = e.detail.key;
+  async function handleTabChange(key: string) {
+    activeTab = key;
     await fetchPackagesByTab(activeTab);
   }
 
-  // =========================
-  // 🚀 INIT
-  // =========================
   onMount(async () => {
-    await fetchMe();
+    await userStore.init();
     await fetchPackagesByTab("feed");
   });
 </script>
 
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-<!-- ========================= -->
-<!-- 🔝 TOPBAR -->
-<!-- ========================= -->
 <div class="topbar">
   <div class="user-info">
-    {#if currentUser}
+    {#if userStore.currentUser}
       <div class="avatar">
-        {currentUser.username[0].toUpperCase()}
+        {userStore.currentUser.username[0].toUpperCase()}
       </div>
       <div class="meta">
-        <div>{currentUser.username}</div>
+        <div class="username">{userStore.currentUser.username}</div>
       </div>
     {:else}
       <div class="avatar guest">
         <span class="material-icons">person_outline</span>
       </div>
-      <div class="meta" on:click={() => goto('/auth/login')}>
-        <div>Guest</div>
-        <small>Login dulu bro 😏</small>
+      <div class="meta" onclick={() => goto('/auth/login')}>
+        <div class="username">Guest</div>
+        <small class="login-prompt">Please login first 😏</small>
       </div>
     {/if}
   </div>
 
-  <button class="icon-btn" on:click={() => goto('/me')}>
+  <button class="icon-btn" onclick={() => goto('/settings')}>
     <span class="material-icons">settings</span>
   </button>
 </div>
 
-<!-- ========================= -->
-<!-- 📊 TABS -->
-<!-- ========================= -->
 <TabView
   {tabs}
   active={activeTab}
-  on:change={handleTabChange}
+  onChange={handleTabChange}
 />
 
-<!-- ========================= -->
-<!-- 📦 CONTENT -->
-<!-- ========================= -->
 <div class="container">
   {#if loading}
     <div class="loading">
@@ -150,85 +103,128 @@
   {:else if error}
     <p class="error">{error}</p>
 
-  {:else if TAB_CONFIG[activeTab]?.requireAuth && !currentUser}
+  {:else if TAB_CONFIG[activeTab]?.requireAuth && !userStore.currentUser}
     <div class="empty">
-      <p>Login dulu buat buka tab ini 🔒</p>
-      <button on:click={() => goto('/auth/login')}>Login</button>
+      <p>Login to view this tab 🔒</p>
+      <button class="btn-primary" onclick={() => goto('/auth/login')}>Login</button>
     </div>
 
   {:else if packages.length === 0}
     <div class="empty">
-      <p>Belum ada data 👀</p>
+      <p>No data found 👀</p>
     </div>
 
   {:else}
-    {#each packages as pkg, i}
-      <div class="item" on:click={() => goto(`/mol/${pkg.name}`)}>
-        {#if activeTab === 'rank'}
-          <div class="rank">#{i + 1}</div>
-        {/if}
+    <div class="mol-grid">
+      {#each packages as pkg, i}
+        <div class="item" onclick={() => goto(`/mol/${pkg.name}`)}>
+          {#if activeTab === 'rank'}
+            <div class="rank">#{i + 1}</div>
+          {/if}
 
-        <MolCard
-          username={pkg.username}
-          name={pkg.name}
-          description={pkg.description || 'No description'}
-          stars={pkg.stars_count}
-          downloads={pkg.downloads_count}
-          atoms={pkg.atoms_count}
-        />
-      </div>
-    {/each}
+          <MolCard
+            username={pkg.username}
+            name={pkg.name}
+            description={pkg.description || 'No description'}
+            stars={pkg.stars_count}
+            downloads={pkg.downloads_count}
+            atoms={pkg.atoms_count}
+          />
+        </div>
+      {/each}
+    </div>
   {/if}
 </div>
 
 <style>
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  background: #111;
-  color: white;
-}
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    align-items: center;
+  }
 
-.user-info {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
+  .user-info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+  }
 
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #444;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--color-primary);
+  }
 
-.container {
-  padding: 10px;
-}
+  .avatar.guest {
+    color: var(--color-text-dim);
+  }
 
-.item {
-  margin-bottom: 10px;
-}
+  .username {
+    font-weight: 600;
+    font-size: 14px;
+  }
 
-.rank {
-  font-weight: bold;
-  margin-bottom: 4px;
-}
+  .login-prompt {
+    font-size: 11px;
+    color: var(--color-text-dim);
+  }
 
-.loading {
-  text-align: center;
-}
+  .container {
+    padding: 16px;
+  }
 
-.spin {
-  animation: spin 1s linear infinite;
-}
+  .item {
+    margin-bottom: 1px;
+  }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+  .rank {
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: var(--color-primary);
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-dim);
+  }
+
+  .spin {
+    animation: spin 1s linear infinite;
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .btn-primary {
+    background: var(--color-primary);
+    color: var(--color-primary-inv);
+    border: none;
+    padding: 8px 16px;
+    font-weight: bold;
+    margin-top: 12px;
+    cursor: pointer;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--color-text-dim);
+  }
 </style>

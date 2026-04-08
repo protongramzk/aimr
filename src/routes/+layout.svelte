@@ -1,55 +1,43 @@
-<script>
-  import { writable } from 'svelte/store';
+<script lang="ts">
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import {refreshToken, getMe, logout } from '$lib/auth';
+  import { refreshToken, logout } from '$lib/auth';
+  import { userStore } from '$lib/stores/user.svelte';
+  import { sidebarStore } from '$lib/stores/sidebar.svelte';
+  import { themeStore } from '$lib/stores/theme.svelte';
   import "$lib/global.css";
-  
-  // Store global user biar semua component bisa subscribe
-  export const currentUser = writable(null)
 
-  let tokenRefreshed = false
+  let { children } = $props();
 
   onMount(async () => {
-    if (!tokenRefreshed) {
-      tokenRefreshed = true
+    // Initialize theme
+    themeStore.applyTheme();
 
-      // coba refresh token
-      const refreshed = await refreshToken()
-      if (refreshed) {
-        // kalau sukses, ambil data user
-        const me = await getMe()
-        currentUser.set(me)
-      } else {
-        console.warn('Token refresh gagal, logout mungkin perlu')
-      }
+    // Initial session check and refresh
+    const refreshed = await refreshToken();
+    if (refreshed) {
+      await userStore.init();
+    } else {
+      console.warn('Token refresh failed, login might be required');
+      await userStore.init(); // Still try to init (might have cached user)
     }
-  })
-  const sidebarOpen = writable(false);
-
-  const toggleSidebar = () => sidebarOpen.update(v => !v);
-  const closeSidebar = () => sidebarOpen.set(false);
-
-  let currentPath = '';
-  let user = null;
-
-  onMount(async () => {
-    currentPath = $page.url.pathname;
-    user = await getMe();
   });
 
   const handleLogout = () => {
     logout();
+    userStore.logout();
     window.location.href = '/auth/login';
   };
 
-  $: navItems = [
+  let currentPath = $derived($page.url.pathname);
+
+  let navItems = $derived([
     { label: 'Home', href: '/', icon: 'home' },
-    user
-      ? { label: 'Profile', href: '/me', icon: 'article' }
+    userStore.currentUser
+      ? { label: 'Profile', href: '/me', icon: 'person' }
       : { label: 'Login', href: '/auth/login', icon: 'login' },
     { label: 'Settings', href: '/settings', icon: 'settings' }
-  ];
+  ]);
 </script>
 
 <svelte:head>
@@ -58,42 +46,53 @@
 </svelte:head>
 
 <div class="app-layout">
-  <!-- 🔝 Header -->
-<div class="appbar">
-  <button class="icon-btn left" on:click={toggleSidebar}>
-    <span class="material-icons dock-icon">vertical_split</span>
-  </button>
-
-  <div class="brand">atomol</div>
-
-</div>
-  <!-- 🌫 Overlay -->
-  {#if $sidebarOpen}
-    <div class="overlay" on:click={closeSidebar}></div>
-  {/if}
-
-  <!-- 📚 Sidebar -->
-  <div class="sidebar {$sidebarOpen ? 'open' : ''}">
-    {#each navItems as item}
-      <a
-        class="nav-item {currentPath === item.href ? 'active' : ''}"
-        href={item.href}
-        on:click={closeSidebar}
-      >
-        <span class="material-icons">{item.icon}</span>
-        <span>{item.label}</span>
-      </a>
-    {/each}
-
-    <button class="nav-item logout" on:click={handleLogout}>
-      <span class="material-icons">logout</span>
-      <span>Logout</span>
+  <!-- Header -->
+  <div class="appbar">
+    <button class="icon-btn left" onclick={() => sidebarStore.toggle()}>
+      <span class="material-icons dock-icon">vertical_split</span>
     </button>
+    <div class="brand">atomol</div>
+    <div class="right-placeholder"></div>
   </div>
 
-  <!-- 🧩 Content -->
+  <!-- Overlay -->
+  {#if sidebarStore.isOpen}
+    <div class="overlay" role="button" tabindex="0" onclick={() => sidebarStore.close()} onkeydown={(e) => e.key === 'Escape' && sidebarStore.close()}></div>
+  {/if}
+
+  <!-- Sidebar -->
+  <div class="sidebar {sidebarStore.isOpen ? 'open' : ''}">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">atomol</div>
+      <button class="icon-btn" onclick={() => sidebarStore.close()}>
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="sidebar-nav">
+      {#each navItems as item}
+        <a
+          class="nav-item {currentPath === item.href ? 'active' : ''}"
+          href={item.href}
+          onclick={() => sidebarStore.close()}
+        >
+          <span class="material-icons">{item.icon}</span>
+          <span>{item.label}</span>
+        </a>
+      {/each}
+
+      {#if userStore.currentUser}
+        <button class="nav-item logout" onclick={handleLogout}>
+          <span class="material-icons">logout</span>
+          <span>Logout</span>
+        </button>
+      {/if}
+    </div>
+  </div>
+
+  <!-- Content -->
   <div class="main-content">
-    <slot />
+    {@render children()}
   </div>
 </div>
 
@@ -103,5 +102,27 @@
     font-family: 'DM Sans', sans-serif;
     background: #0f0f0f;
     color: #fff;
+  }
+
+  .app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .main-content {
+    flex: 1;
+    padding-bottom: 20px;
+  }
+
+  .right-placeholder {
+    width: 40px;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 90;
   }
 </style>

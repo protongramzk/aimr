@@ -1,29 +1,42 @@
-// src/lib/api.js
-
-const BASE_URL = 'https//aipm-tawny.vercel.app'
+const BASE_URL = 'https://aipm-tawny.vercel.app'
 export const API_BASE = BASE_URL
+
 // =========================
 // 🔑 TOKEN MANAGEMENT
 // =========================
 
-// simpan token di localStorage (simple version)
-export function setToken(token) {
+/**
+ * Stores the JWT token in localStorage
+ */
+export function setToken(token: string): void {
   localStorage.setItem('token', token)
 }
 
-export function getToken() {
+/**
+ * Retrieves the JWT token from localStorage
+ */
+export function getToken(): string | null {
   return localStorage.getItem('token')
 }
 
-export function setApiKey(key) {
+/**
+ * Stores the API key in localStorage
+ */
+export function setApiKey(key: string): void {
   localStorage.setItem('api_key', key)
 }
 
-export function getApiKey() {
+/**
+ * Retrieves the API key from localStorage
+ */
+export function getApiKey(): string | null {
   return localStorage.getItem('api_key')
 }
 
-export function clearAuth() {
+/**
+ * Clears all authentication data from localStorage
+ */
+export function clearAuth(): void {
   localStorage.removeItem('token')
   localStorage.removeItem('api_key')
 }
@@ -32,18 +45,25 @@ export function clearAuth() {
 // 🚀 CORE FETCH WRAPPER
 // =========================
 
-async function request(path, { method = 'GET', body, auth = false, apiKey = false } = {}) {
-  const headers = {
+interface RequestOptions {
+  method?: string;
+  body?: any;
+  auth?: boolean;
+  apiKey?: boolean;
+}
+
+async function request(path: string, { method = 'GET', body, auth = false, apiKey = false }: RequestOptions = {}): Promise<any> {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   }
 
-  // inject JWT
+  // Inject JWT
   if (auth) {
     const token = getToken()
     if (token) headers['Authorization'] = `Bearer ${token}`
   }
 
-  // inject API key
+  // Inject API key
   if (apiKey) {
     const key = getApiKey()
     if (key) headers['x-api-key'] = key
@@ -68,26 +88,28 @@ async function request(path, { method = 'GET', body, auth = false, apiKey = fals
 // 🔐 AUTH
 // =========================
 
-export async function signup({ email, password, username }) {
+export async function signup(data: any): Promise<any> {
   return request('/auth/signup', {
     method: 'POST',
-    body: { email, password, username }
+    body: data
   })
 }
 
-export async function login({ email, password }) {
+export async function login(data: any): Promise<any> {
   const res = await request('/auth/login', {
     method: 'POST',
-    body: { email, password }
+    body: data
   })
 
-  // auto save token 🔥
-  setToken(res.session.access_token)
+  // Auto save token
+  if (res.session?.access_token) {
+    setToken(res.session.access_token)
+  }
 
   return res
 }
 
-export function getMe() {
+export function getMe(): Promise<any> {
   return request('/auth/me', { auth: true })
 }
 
@@ -95,24 +117,26 @@ export function getMe() {
 // 🔑 API KEYS
 // =========================
 
-export async function createApiKey(name = 'default') {
+export async function createApiKey(name = 'default'): Promise<any> {
   const res = await request('/api-keys/create', {
     method: 'POST',
     auth: true,
     body: { name }
   })
 
-  // simpan langsung biar praktis 😎
-  setApiKey(res.key)
+  // Save directly for convenience
+  if (res.key) {
+    setApiKey(res.key)
+  }
 
   return res
 }
 
-export function getApiKeys() {
+export function getApiKeys(): Promise<any> {
   return request('/api-keys', { auth: true })
 }
 
-export function deleteApiKey(id) {
+export function deleteApiKey(id: string): Promise<any> {
   return request(`/api-keys/${id}`, {
     method: 'DELETE',
     auth: true
@@ -123,16 +147,16 @@ export function deleteApiKey(id) {
 // 📦 PACKAGES
 // =========================
 
-export function fetchPackages({ search = '', limit = 20, offset = 0 } = {}) {
-  const params = new URLSearchParams({ search, limit, offset })
-  return request(`/packages`)
+export function fetchPackages({ search = '', limit = 20, offset = 0 } = {}): Promise<any> {
+  const params = new URLSearchParams({ search, limit: limit.toString(), offset: offset.toString() })
+  return request(`/packages?${params.toString()}`)
 }
 
-export function getPackage(id) {
+export function getPackage(id: string): Promise<any> {
   return request(`/packages/${id}`)
 }
 
-export function createPackage(data) {
+export function createPackage(data: any): Promise<any> {
   return request('/packages', {
     method: 'POST',
     apiKey: true,
@@ -140,7 +164,7 @@ export function createPackage(data) {
   })
 }
 
-export function updatePackage(id, data) {
+export function updatePackage(id: string, data: any): Promise<any> {
   return request(`/packages/${id}`, {
     method: 'PATCH',
     apiKey: true,
@@ -148,7 +172,7 @@ export function updatePackage(id, data) {
   })
 }
 
-export function deletePackage(id) {
+export function deletePackage(id: string): Promise<any> {
   return request(`/packages/${id}`, {
     method: 'DELETE',
     apiKey: true
@@ -159,11 +183,11 @@ export function deletePackage(id) {
 // 📦 VERSIONS
 // =========================
 
-export function getVersions(packageId) {
+export function getVersions(packageId: string): Promise<any> {
   return request(`/packages/${packageId}/versions`)
 }
 
-export function createVersion(packageId, version) {
+export function createVersion(packageId: string, version: string): Promise<any> {
   return request(`/packages/${packageId}/versions`, {
     method: 'POST',
     apiKey: true,
@@ -175,8 +199,8 @@ export function createVersion(packageId, version) {
 // 📂 FILES
 // =========================
 
-// NOTE: upload beda karena multipart
-export async function uploadFile(packageId, versionId, file) {
+// Multipart upload requires different handling
+export async function uploadFile(packageId: string, versionId: string, file: File): Promise<any> {
   const key = getApiKey()
 
   const formData = new FormData()
@@ -187,7 +211,7 @@ export async function uploadFile(packageId, versionId, file) {
     {
       method: 'POST',
       headers: {
-        'x-api-key': key
+        'x-api-key': key || ''
       },
       body: formData
     }
@@ -202,7 +226,7 @@ export async function uploadFile(packageId, versionId, file) {
   return data
 }
 
-export function getFiles(packageId, versionId) {
+export function getFiles(packageId: string, versionId: string): Promise<any> {
   return request(`/packages/${packageId}/versions/${versionId}/files`)
 }
 
@@ -210,21 +234,21 @@ export function getFiles(packageId, versionId) {
 // ⭐ STARS & DOWNLOADS
 // =========================
 
-export function starPackage(id) {
+export function starPackage(id: string): Promise<any> {
   return request(`/packages/${id}/star`, {
     method: 'POST',
     apiKey: true
   })
 }
 
-export function unstarPackage(id) {
+export function unstarPackage(id: string): Promise<any> {
   return request(`/packages/${id}/star`, {
     method: 'DELETE',
     apiKey: true
   })
 }
 
-export function downloadPackage(id) {
+export function downloadPackage(id: string): Promise<any> {
   return request(`/packages/${id}/download`, {
     method: 'POST'
   })
