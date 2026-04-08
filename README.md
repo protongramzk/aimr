@@ -1,42 +1,51 @@
-# sv
+# atomol (AIMR)
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+**atomol** is a modern registry and distribution platform for **Atomic Functions** (Atoms) designed for JavaScript and Edge Runtime environments.
 
-## Creating a project
+Inspired by the concept of "Chemical Programming," atomol allows developers to share and consume small, self-contained, and highly optimized functions that reside in their own files. This approach ensures maximum modularity, explicit parameter passing, and zero dependencies on Node.js built-ins, making them perfect for V8 Isolate environments like Cloudflare Workers, Supabase Edge Functions, and Vercel Edge.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## 🚀 Key Features
 
-```sh
-# create a new project
-npx sv create my-app
-```
+- **Atomic Modularity**: Every function (atom) is an independent module. No more bloated libraries—import exactly what you need.
+- **Edge Native**: Optimized for modern Edge Runtimes (WinterCG compliant), ensuring lightweight execution and fast cold starts.
+- **Molecule Registry**: Browse a growing feed of molecules (libraries of atoms), ranked by popularity and community feedback.
+- **Interactive File Viewer**: Inspect the source code of any atom directly in the browser with syntax highlighting.
+- **API Management**: Easily generate API keys to publish your own molecules and contribute to the ecosystem.
+- **Themeable UI**: Built with a sleek, flat monochrome design system that supports multiple high-contrast themes (Raspberry, Blueberry, Lime, and Violet).
 
-To recreate this project with the same configuration:
+## 🛠 Tech Stack
 
-```sh
-# recreate this project
-pnpm dlx sv@0.13.0 create --template minimal --types ts --install pnpm aipmui
-```
+- **Frontend**: Svelte 5 (Runes) + SvelteKit
+- **Language**: TypeScript
+- **Styling**: Unified Monochrome Design System
+- **API**: Custom REST API for package management and star tracking
+- **Distribution**: Integrated Supabase-powered CDN
 
-## Developing
+## 📖 Getting Started
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Developing Locally
 
-```sh
-npm run dev
+1. Install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+2. Start the development server:
+   ```bash
+   pnpm run dev
+   ```
 
-## Building
+3. Build for production:
+   ```bash
+   pnpm run build
+   ```
 
-To create a production version of your app:
+## 🧪 Concepts
 
-```sh
-npm run build
-```
+- **Atom**: A single, focused JavaScript function in its own file.
+- **Molecule**: A collection of atoms grouped together as a package.
+- **Chemical Programming**: A development philosophy emphasizing modularity, immutability, and explicit dependencies.
 
-You can preview the production build with `npm run preview`.
+---
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Built with ❤️ for the Edge computing community.
