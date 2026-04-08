@@ -1,15 +1,13 @@
-// utils.js
-
 /**
- * Copy text ke clipboard
+ * Copies text to the clipboard
  * @param {string} text 
  */
-export function copyToClipboard(text) {
+export function copyToClipboard(text: string): void {
     if (!navigator.clipboard) {
-        // fallback kalau browser lama
+        // Fallback for older browsers
         const textarea = document.createElement('textarea');
         textarea.value = text;
-        textarea.style.position = 'fixed'; // biar nggak scroll
+        textarea.style.position = 'fixed'; // Avoid scrolling
         textarea.style.opacity = '0';
         document.body.appendChild(textarea);
         textarea.focus();

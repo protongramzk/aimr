@@ -1,281 +1,225 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { userStore } from '$lib/stores/user.svelte';
   import {
-    getMe,
-    isLoggedIn,
-    logout,
     getApiKeys,
     createApiKey,
     deleteApiKey,
-    renameApiKey
-  } from '$lib/auth.js';
+    renameApiKey,
+    logout
+  } from '$lib/auth';
+  import { copyToClipboard } from '$lib/utils';
 
-  // ─── STATE ───────────────────────────────────
-  let loading = true;
-  let user = null;
+  let keys = $state<any[]>([]);
+  let keysLoading = $state(true);
+  let creating = $state(false);
+  let newKeyName = $state('');
 
-  let keys = [];
-  let keysLoading = true;
+  // UI States
+  let revealedKey = $state('');
+  let deletingId = $state<string | null>(null);
+  let renamingId = $state<string | null>(null);
+  let renameValue = $state('');
 
-  // new key form
-  let newKeyName = '';
-  let creating = false;
-  let newKeyResult = null; // { key } — ditampilkan sekali setelah create
-
-  // rename
-  let renamingId = null;
-  let renameValue = '';
-
-  // delete confirm
-  let deletingId = null;
-
-  // ─── INIT ────────────────────────────────────
-  onMount(async () => {
-    if (!isLoggedIn()) {
-      goto('/auth/login');
-      return;
-    }
-
-    try {
-      const res = await getMe();
-      user = res?.user ?? res;
-    } catch (e) {
-      console.error('getMe error:', e);
-    }
-
-    loading = false;
-    await loadKeys();
-  });
-
-  async function loadKeys() {
+  async function fetchKeys() {
     keysLoading = true;
     try {
       const res = await getApiKeys();
-      keys = res.keys ?? res ?? [];
-    } catch (e) {
-      console.error(e);
+      keys = res.keys || [];
+    } catch (err) {
+      console.error('Failed to fetch keys', err);
     } finally {
       keysLoading = false;
     }
   }
 
-  // ─── API KEY ACTIONS ──────────────────────────
   async function handleCreate() {
     if (!newKeyName.trim()) return;
     creating = true;
-    newKeyResult = null;
     try {
-      const res = await createApiKey(newKeyName.trim());
-      newKeyResult = res; // simpan raw key untuk ditampilkan
+      const res = await createApiKey(newKeyName);
+      revealedKey = res.key;
       newKeyName = '';
-      await loadKeys();
-    } catch (e) {
-      console.error(e);
+      await fetchKeys();
+    } catch (err) {
+      alert('Failed to create key');
     } finally {
       creating = false;
     }
   }
 
-  async function handleDelete(id) {
-    await deleteApiKey(id);
-    deletingId = null;
-    await loadKeys();
+  async function handleDelete(id: string) {
+    try {
+      await deleteApiKey(id);
+      keys = keys.filter(k => k.id !== id);
+      deletingId = null;
+    } catch (err) {
+      alert('Failed to delete key');
+    }
   }
 
-  async function handleRename(id) {
+  async function handleRename(id: string) {
     if (!renameValue.trim()) return;
-    await renameApiKey(id, renameValue.trim());
-    renamingId = null;
-    renameValue = '';
-    await loadKeys();
+    try {
+      await renameApiKey(id, renameValue);
+      const key = keys.find(k => k.id === id);
+      if (key) key.name = renameValue;
+      renamingId = null;
+    } catch (err) {
+      alert('Failed to rename key');
+    }
   }
 
-  function startRename(key) {
+  function startRename(key: any) {
     renamingId = key.id;
     renameValue = key.name;
   }
 
-  function copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
-  }
-
   function handleLogout() {
     logout();
+    userStore.logout();
     goto('/auth/login');
   }
 
-  // ─── HELPERS ─────────────────────────────────
-  function fmtDate(iso) {
-    return new Date(iso).toLocaleDateString('id-ID', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
+  function fmtDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString();
   }
 
-  function initials(u) {
-    const name = u?.username || u?.email || '?';
-    return name.slice(0, 2).toUpperCase();
-  }
+  onMount(async () => {
+    await userStore.init();
+    if (!userStore.currentUser) {
+      goto('/auth/login');
+      return;
+    }
+    fetchKeys();
+  });
 </script>
 
-<!-- ════════════════════════════════════════
-     LOADING
-════════════════════════════════════════ -->
-{#if loading}
-  <div class="loading" style="padding: 48px 16px;">
-    <span class="material-icons spin" style="font-size:32px; color:var(--color-primary)">sync</span>
-  </div>
-
-<!-- ════════════════════════════════════════
-     MAIN
-════════════════════════════════════════ -->
-{:else}
+{#if userStore.currentUser}
 <div class="container me-page">
 
-  <!-- ── PROFILE CARD ─────────────────────── -->
-  <section class="card me-profile-card">
+  <div class="card me-profile-card">
     <div class="me-avatar-row">
       <div class="avatar me-avatar">
-        {initials(user)}
+        {userStore.currentUser.username[0].toUpperCase()}
       </div>
       <div class="me-avatar-meta">
-        <span class="me-username">
-          {user?.username || '—'}
-        </span>
-        <span class="email me-email">
-          {user?.email || user?.id || '—'}
-        </span>
-        {#if user?.created_at}
-          <span class="label">Bergabung {fmtDate(user.created_at)}</span>
-        {/if}
+        <span class="me-username">{userStore.currentUser.username}</span>
+        <span class="me-email">{userStore.currentUser.email || 'No email provided'}</span>
       </div>
     </div>
 
     <div class="me-profile-actions">
-      <button class="btn btn-outline-dim me-logout-btn" on:click={handleLogout}>
-        <span class="material-icons" style="font-size:16px; margin-right:6px">logout</span>
-        Logout
+      <button class="icon-btn logout-btn" onclick={handleLogout}>
+        <span class="material-icons">logout</span>
+        <span>Logout</span>
       </button>
     </div>
-  </section>
-
-  <!-- ── DIVIDER LABEL ────────────────────── -->
-  <div class="me-section-label">
-    <span class="material-icons" style="font-size:14px">vpn_key</span>
-    API Keys
   </div>
 
-  <!-- ── NEW KEY RESULT BANNER ────────────── -->
-  {#if newKeyResult}
+  <div class="me-section-label">
+    <span class="material-icons" style="font-size:14px">vpn_key</span>
+    API KEYS
+  </div>
+
+  {#if revealedKey}
     <div class="card me-key-reveal">
       <div class="me-key-reveal-head">
-        <span class="material-icons" style="color:var(--color-tertiary);font-size:18px">check_circle</span>
-        <span>Key berhasil dibuat. Salin sekarang — tidak akan ditampilkan lagi.</span>
+        <span class="material-icons" style="color:var(--color-primary)">info</span>
+        Copy your key now. You won't see it again!
       </div>
       <div class="me-key-raw">
-        <code>{newKeyResult.key.key}</code>
-        <button class="icon-btn" title="Salin" on:click={() => copyToClipboard(newKeyResult.key.key)}>
+        <code>{revealedKey}</code>
+        <button class="icon-btn" onclick={() => copyToClipboard(revealedKey)}>
           <span class="material-icons" style="font-size:18px">content_copy</span>
         </button>
       </div>
-      <button class="btn btn-outline-dim" style="margin-top:8px" on:click={() => newKeyResult = null}>
-        Tutup
-      </button>
+      <button class="btn-text" onclick={() => revealedKey = ''} style="margin-top:12px">Dismiss</button>
     </div>
   {/if}
 
-  <!-- ── CREATE KEY FORM ──────────────────── -->
   <div class="card">
-    <div class="card-header">
-      <span class="card-title">Buat API Key Baru</span>
-    </div>
-    <div class="input-group" style="margin-bottom:0">
-      <label class="input-label" for="key-name">Nama Key</label>
+    <div class="boxy-input-group" style="border:none; padding:0">
+      <label class="boxy-label" for="key-name">New API Key Name</label>
       <div class="me-create-row">
         <input
           id="key-name"
-          class="input-field"
+          class="boxy-text-input"
           type="text"
-          placeholder="contoh: cli-local"
+          placeholder="e.g., local-dev"
           bind:value={newKeyName}
-          on:keydown={(e) => e.key === 'Enter' && handleCreate()}
+          onkeydown={(e) => e.key === 'Enter' && handleCreate()}
         />
         <button
-          class="btn btn-primary me-create-btn"
-          on:click={handleCreate}
+          class="btn-primary me-create-btn"
+          onclick={handleCreate}
           disabled={creating || !newKeyName.trim()}
         >
           {#if creating}
-            <span class="material-icons spin" style="font-size:16px">sync</span>
+            <span class="material-icons spin">sync</span>
           {:else}
-            <span class="material-icons" style="font-size:16px">add</span>
+            <span class="material-icons">add</span>
           {/if}
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ── KEY LIST ─────────────────────────── -->
   <div class="card" style="padding:0; overflow:hidden;">
     {#if keysLoading}
-      <div class="loading" style="padding:32px">
-        <span class="material-icons spin" style="font-size:24px;color:var(--color-primary)">sync</span>
+      <div class="loading-state">
+        <span class="material-icons spin">sync</span>
       </div>
-
     {:else if keys.length === 0}
-      <div class="empty" style="padding:32px; color:var(--color-text-dim)">
-        <span class="material-icons" style="font-size:32px;display:block;margin-bottom:8px">key_off</span>
-        Belum ada API key.
+      <div class="empty-state">
+        <span class="material-icons">key_off</span>
+        <p>No API keys found.</p>
       </div>
-
     {:else}
-      <ul class="list">
+      <ul class="key-list">
         {#each keys as key (key.id)}
-          <li class="list-item me-key-item">
-
-            <!-- LEFT: name / rename input -->
-            <div class="me-key-left">
+          <li class="key-item">
+            <div class="key-info">
               {#if renamingId === key.id}
-                <div class="me-rename-row">
+                <div class="rename-row">
                   <input
-                    class="input-field me-rename-input"
+                    class="boxy-text-input rename-input"
                     bind:value={renameValue}
-                    on:keydown={(e) => e.key === 'Enter' && handleRename(key.id)}
-                    placeholder="Nama baru"
+                    onkeydown={(e) => e.key === 'Enter' && handleRename(key.id)}
+                    placeholder="New name"
                   />
-                  <button class="icon-btn" on:click={() => handleRename(key.id)} title="Simpan">
-                    <span class="material-icons" style="font-size:18px;color:var(--color-primary)">check</span>
+                  <button class="icon-btn" onclick={() => handleRename(key.id)}>
+                    <span class="material-icons" style="color:var(--color-primary)">check</span>
                   </button>
-                  <button class="icon-btn" on:click={() => renamingId = null} title="Batal">
-                    <span class="material-icons" style="font-size:18px">close</span>
+                  <button class="icon-btn" onclick={() => renamingId = null}>
+                    <span class="material-icons">close</span>
                   </button>
                 </div>
               {:else}
-                <span class="me-key-name">{key.name}</span>
-                <span class="label">{fmtDate(key.created_at)}</span>
+                <span class="key-name">{key.name}</span>
+                <span class="key-date">Created on {fmtDate(key.created_at)}</span>
               {/if}
             </div>
 
-            <!-- RIGHT: actions / delete confirm -->
-            <div class="me-key-actions">
+            <div class="key-actions">
               {#if deletingId === key.id}
-                <span class="label" style="margin-right:8px">Hapus?</span>
-                <button class="icon-btn" on:click={() => handleDelete(key.id)} title="Ya, hapus">
-                  <span class="material-icons" style="font-size:18px;color:var(--color-error)">delete_forever</span>
+                <span class="confirm-text">Delete?</span>
+                <button class="icon-btn" onclick={() => handleDelete(key.id)}>
+                  <span class="material-icons" style="color:var(--color-error)">delete_forever</span>
                 </button>
-                <button class="icon-btn" on:click={() => deletingId = null} title="Batal">
-                  <span class="material-icons" style="font-size:18px">close</span>
+                <button class="icon-btn" onclick={() => deletingId = null}>
+                  <span class="material-icons">close</span>
                 </button>
               {:else}
-                <button class="icon-btn" on:click={() => startRename(key)} title="Rename">
-                  <span class="material-icons" style="font-size:18px">edit</span>
+                <button class="icon-btn" onclick={() => startRename(key)}>
+                  <span class="material-icons">edit</span>
                 </button>
-                <button class="icon-btn" on:click={() => deletingId = key.id} title="Hapus">
-                  <span class="material-icons" style="font-size:18px">delete</span>
+                <button class="icon-btn" onclick={() => deletingId = key.id}>
+                  <span class="material-icons">delete</span>
                 </button>
               {/if}
             </div>
-
           </li>
         {/each}
       </ul>
@@ -286,18 +230,25 @@
 {/if}
 
 <style>
-  /* ── PAGE WRAPPER ──────────────────────── */
   .me-page {
-    max-width: 540px;
+    max-width: 600px;
     margin: 0 auto;
     padding-top: 24px;
-  }
-
-  /* ── PROFILE CARD ──────────────────────── */
-  .me-profile-card {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 20px;
+  }
+
+  .me-profile-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .me-avatar-row {
@@ -309,24 +260,22 @@
   .me-avatar {
     width: 56px;
     height: 56px;
-    border-radius: 12px;
-    font-size: 1.4rem;
-    background-color: var(--mat-primary-container);
-    color: var(--mat-on-primary-container);
-    flex-shrink: 0;
+    background: var(--color-surface-2);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 24px;
+    font-weight: 800;
   }
 
   .me-avatar-meta {
     display: flex;
     flex-direction: column;
-    gap: 2px;
   }
 
   .me-username {
-    font-family: var(--font-display);
-    font-weight: 800;
     font-size: 18px;
-    letter-spacing: -0.5px;
+    font-weight: 800;
     color: var(--color-text-main);
   }
 
@@ -335,37 +284,33 @@
     color: var(--color-text-dim);
   }
 
-  .me-profile-actions {
+  .logout-btn {
     display: flex;
-    justify-content: flex-end;
-  }
-
-  .me-logout-btn {
-    width: auto;
-    margin-bottom: 0;
-    display: inline-flex;
     align-items: center;
-    padding: 8px 16px;
+    gap: 8px;
+    color: var(--color-text-dim);
     font-size: 13px;
+    font-weight: 600;
   }
 
-  /* ── SECTION LABEL ─────────────────────── */
+  .logout-btn:hover {
+    color: var(--color-error);
+  }
+
   .me-section-label {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-family: var(--font-display);
+    gap: 8px;
     font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-weight: 800;
     color: var(--color-text-dim);
-    margin: 8px 0 4px;
+    letter-spacing: 2px;
+    margin-top: 8px;
   }
 
-  /* ── KEY REVEAL BANNER ─────────────────── */
   .me-key-reveal {
-    border-color: var(--color-tertiary);
-    background-color: rgba(24, 255, 255, 0.05);
+    background: rgba(var(--color-primary-rgb), 0.1);
+    border-color: var(--color-primary);
   }
 
   .me-key-reveal-head {
@@ -373,85 +318,127 @@
     align-items: center;
     gap: 8px;
     font-size: 13px;
-    color: var(--color-text-dim);
+    color: var(--color-text-main);
     margin-bottom: 12px;
   }
 
   .me-key-raw {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background-color: var(--color-base);
+    gap: 12px;
+    background: var(--color-base);
     border: 1px solid var(--color-border);
+    padding: 12px;
     border-radius: 4px;
-    padding: 10px 12px;
-    overflow-x: auto;
   }
 
   .me-key-raw code {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--color-tertiary);
     flex: 1;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-primary);
     word-break: break-all;
   }
 
-  /* ── CREATE ROW ────────────────────────── */
   .me-create-row {
     display: flex;
-    gap: 8px;
+    gap: 12px;
+    margin-top: 8px;
   }
 
-  .me-create-row .input-field {
+  .btn-primary {
+    background: var(--color-primary);
+    color: var(--color-primary-inv);
+    border: none;
+    padding: 8px 16px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .key-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .key-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .key-item:last-child {
+    border-bottom: none;
+  }
+
+  .key-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     flex: 1;
   }
 
-  .me-create-btn {
-    width: auto;
-    margin-bottom: 0;
-    padding: 12px 14px;
-    flex-shrink: 0;
-  }
-
-  .me-create-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  /* ── KEY LIST ITEM ─────────────────────── */
-  .me-key-item {
-    padding: 14px 16px;
-  }
-
-  .me-key-left {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  .me-key-name {
+  .key-name {
     font-family: var(--font-mono);
     font-size: 14px;
+    font-weight: 600;
+  }
+
+  .key-date {
+    font-size: 11px;
+    color: var(--color-text-dim);
+  }
+
+  .key-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .rename-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rename-input {
+    border-bottom: 1px solid var(--color-primary);
+    padding: 4px 0;
+  }
+
+  .confirm-text {
+    font-size: 12px;
+    color: var(--color-error);
+    font-weight: 600;
+  }
+
+  .loading-state, .empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--color-text-dim);
+  }
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .btn-text {
+    background: transparent;
+    border: none;
+    color: var(--color-text-dim);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0;
+  }
+
+  .btn-text:hover {
     color: var(--color-text-main);
-  }
-
-  .me-key-actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-  }
-
-  /* ── RENAME ROW ────────────────────────── */
-  .me-rename-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .me-rename-input {
-    padding: 6px 10px;
-    font-size: 13px;
   }
 </style>
