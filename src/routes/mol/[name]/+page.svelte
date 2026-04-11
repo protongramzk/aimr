@@ -6,7 +6,6 @@
   import TabView from '$lib/components/TabView.svelte';
   import { marked } from 'marked';
   import { getPackageDetail } from '$lib/auth';
-  import { userStore } from '$lib/stores/user.svelte';
   import "$lib/leorpiomd.css";
 
   let loading = $state(true);

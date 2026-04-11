@@ -56,8 +56,15 @@
     await fetchPackagesByTab(activeTab);
   }
 
+  // Use an effect to refetch if the user changes while on the "you" tab
+  $effect(() => {
+    if (activeTab === 'you' || (activeTab === 'feed' && !packages.length)) {
+       fetchPackagesByTab(activeTab);
+    }
+  });
+
   onMount(async () => {
-    await userStore.init();
+    // No need to wait for userStore.init() if we already have cached user
     await fetchPackagesByTab("feed");
   });
 </script>
