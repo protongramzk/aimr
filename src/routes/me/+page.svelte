@@ -113,7 +113,7 @@
   <div class="card me-profile-card">
     <div class="me-avatar-row">
       <div class="avatar me-avatar">
-        {userStore.currentUser.username[0].toUpperCase()}
+        {userStore.currentUser?.username?.[0]?.toUpperCase() ?? "?"}
       </div>
       <div class="me-avatar-meta">
         <span class="me-username">{userStore.currentUser.username}</span>
