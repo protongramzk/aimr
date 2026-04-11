@@ -13,11 +13,16 @@ class UserStore {
   }
 
   loadFromStorage() {
+    if (!browser) return;
     const cached = localStorage.getItem('aipm_user');
     if (cached) {
       try {
-        this.currentUser = JSON.parse(cached);
-        this.userLoading = false;
+        const parsed = JSON.parse(cached);
+        // Ensure the parsed data has a username before setting it
+        if (parsed && typeof parsed === 'object') {
+          this.currentUser = parsed;
+          this.userLoading = false;
+        }
       } catch (e) {
         console.error('Failed to parse cached user', e);
       }
@@ -25,12 +30,10 @@ class UserStore {
   }
 
   async init() {
+    if (!browser) return;
     // If we are already loaded from network, don't re-fetch immediately
-    // unless we want to force a refresh.
     if (this.isLoaded) return;
 
-    // Importing getMe here to avoid circular dependency if possible,
-    // though auth.ts currently doesn't import userStore.
     const { getMe } = await import('$lib/auth');
 
     try {
@@ -49,6 +52,7 @@ class UserStore {
   logout() {
     this.currentUser = null;
     this.isLoaded = false;
+    this.userLoading = false;
   }
 }
 

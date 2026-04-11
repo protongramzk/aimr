@@ -73,7 +73,7 @@
   <div class="user-info">
     {#if userStore.currentUser}
       <div class="avatar">
-        {userStore.currentUser.username[0].toUpperCase()}
+        {userStore.currentUser?.username?.[0]?.toUpperCase() ?? "?"}
       </div>
       <div class="meta">
         <div class="username">{userStore.currentUser.username}</div>

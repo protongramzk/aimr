@@ -24,3 +24,33 @@ https://svelte.dev/e/a11y_no_static_element_interactions
 https://svelte.dev/e/a11y_click_events_have_key_events
 2:52:37 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 `<div>` with a click handler must have an ARIA role
 https://svelte.dev/e/a11y_no_static_element_interactions
+4:44:14 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:44:14 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:44:14 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:44:14 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:44:14 AM [vite] (client) hmr update /src/routes/+page.svelte
+4:44:14 AM [vite] (ssr) page reload src/routes/+page.svelte
+4:44:14 AM [vite] (client) hmr update /src/routes/me/+page.svelte
+4:44:14 AM [vite] (ssr) page reload src/routes/me/+page.svelte
+4:45:06 AM [vite] (client) hmr update /src/routes/+layout.svelte, /src/routes/+page.svelte, /src/routes/me/+page.svelte
+4:45:06 AM [vite] (ssr) page reload src/lib/stores/user.svelte.ts
+4:46:05 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:46:05 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:46:05 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:46:05 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:46:06 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:46:06 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:46:06 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:46:06 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
