@@ -1,7 +1,6 @@
 <script lang="ts">
   import { login } from '$lib/auth';
   import { goto } from '$app/navigation';
-  import { userStore } from '$lib/stores/user.svelte';
 
   let email = $state('');
   let password = $state('');
@@ -15,7 +14,7 @@
 
     try {
       await login(email, password);
-      await userStore.init();
+      // userStore is updated inside login -> saveSession
       goto('/');
     } catch (err: any) {
       error = err.message || 'Login failed';

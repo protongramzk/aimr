@@ -13,19 +13,15 @@
     // Initialize theme
     themeStore.applyTheme();
 
-    // Initial session check and refresh
-    const refreshed = await refreshToken();
-    if (refreshed) {
-      await userStore.init();
-    } else {
-      console.warn('Token refresh failed, login might be required');
-      await userStore.init(); // Still try to init (might have cached user)
-    }
+    // Try to refresh token if we have one
+    await refreshToken();
+
+    // Background sync user data
+    await userStore.init();
   });
 
   const handleLogout = () => {
     logout();
-    userStore.logout();
     window.location.href = '/auth/login';
   };
 

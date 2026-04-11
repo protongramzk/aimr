@@ -1,28 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { getApiKeys, createApiKey, deleteApiKey, renameApiKey, logout } from '$lib/auth';
   import { userStore } from '$lib/stores/user.svelte';
-  import {
-    getApiKeys,
-    createApiKey,
-    deleteApiKey,
-    renameApiKey,
-    logout
-  } from '$lib/auth';
-  import { copyToClipboard } from '$lib/utils';
 
   let keys = $state<any[]>([]);
-  let keysLoading = $state(true);
-  let creating = $state(false);
+  let keysLoading = $state(false);
   let newKeyName = $state('');
-
-  // UI States
   let revealedKey = $state('');
+  let creating = $state(false);
+
   let deletingId = $state<string | null>(null);
   let renamingId = $state<string | null>(null);
   let renameValue = $state('');
 
   async function fetchKeys() {
+    if (!userStore.currentUser) return;
     keysLoading = true;
     try {
       const res = await getApiKeys();
@@ -78,7 +71,6 @@
 
   function handleLogout() {
     logout();
-    userStore.logout();
     goto('/auth/login');
   }
 
@@ -86,13 +78,32 @@
     return new Date(dateStr).toLocaleDateString();
   }
 
-  onMount(async () => {
-    await userStore.init();
-    if (!userStore.currentUser) {
-      goto('/auth/login');
-      return;
+  async function copyToClipboard(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Copied to clipboard!');
+    } catch (err) {
+      alert('Failed to copy');
     }
-    fetchKeys();
+  }
+
+  $effect(() => {
+    if (!userStore.userLoading && !userStore.currentUser) {
+      goto('/auth/login');
+    }
+  });
+
+  onMount(async () => {
+    // We can fetch keys immediately if we have a user
+    if (userStore.currentUser) {
+      fetchKeys();
+    } else {
+      // If no user, wait for init to see if session is valid
+      await userStore.init();
+      if (userStore.currentUser) {
+        fetchKeys();
+      }
+    }
   });
 </script>
 
@@ -227,6 +238,11 @@
   </div>
 
 </div>
+{:else if userStore.userLoading}
+  <div class="loading-state">
+     <span class="material-icons spin">sync</span>
+     <p>Loading profile...</p>
+  </div>
 {/if}
 
 <style>

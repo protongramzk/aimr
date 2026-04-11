@@ -1,3 +1,5 @@
+import { userStore } from './stores/user.svelte';
+
 const BASE_URL = 'https://aipm-tawny.vercel.app'
 
 export interface User {
@@ -30,6 +32,7 @@ function decodeJWT(token: string): any {
  * Checks if the current token is expired or close to expiring
  */
 export function isTokenExpired(): boolean {
+  if (typeof window === 'undefined') return true;
   const token = localStorage.getItem('aipm_token')
   if (!token) return true
 
@@ -57,10 +60,12 @@ function saveSession({ access_token, refresh_token, user }: SessionData): void {
     localStorage.setItem('aipm_user', JSON.stringify(user))
     // Important: Store user ID separately
     localStorage.setItem('aipm_user_id', user.id)
+    userStore.currentUser = user;
   }
 }
 
 export function getUserId(): string | null {
+  if (typeof window === 'undefined') return null;
   return localStorage.getItem('aipm_user_id')
 }
 
@@ -69,6 +74,7 @@ function clearSession(): void {
   localStorage.removeItem('aipm_refresh')
   localStorage.removeItem('aipm_user')
   localStorage.removeItem('aipm_user_id')
+  userStore.logout();
 }
 
 // ─────────────────────────────────────────
@@ -81,6 +87,7 @@ export async function refreshToken(): Promise<boolean> {
   if (refreshingPromise) return refreshingPromise;
 
   refreshingPromise = (async () => {
+    if (typeof window === 'undefined') return false;
     const refresh_token = localStorage.getItem('aipm_refresh')
     if (!refresh_token) return false
 
@@ -121,7 +128,7 @@ async function req(method: string, path: string, body?: any, retry = true): Prom
     await refreshToken()
   }
 
-  let token = localStorage.getItem('aipm_token')
+  let token = typeof window !== 'undefined' ? localStorage.getItem('aipm_token') : null;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -204,10 +211,12 @@ export function logout(): void {
 // ✅ STATUS
 // ─────────────────────────────────────────
 export function isLoggedIn(): boolean {
+  if (typeof window === 'undefined') return false;
   return !!localStorage.getItem('aipm_token')
 }
 
 export function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
   return localStorage.getItem('aipm_token')
 }
 
@@ -216,7 +225,7 @@ export function getToken(): string | null {
 // ─────────────────────────────────────────
 export async function getMe(): Promise<User | null> {
   const userId = getUserId()
-  const cached = localStorage.getItem('aipm_user')
+  const cached = typeof window !== 'undefined' ? localStorage.getItem('aipm_user') : null;
 
   if (!userId) {
     return null
@@ -228,7 +237,10 @@ export async function getMe(): Promise<User | null> {
     const data = await req('GET', `/u/${userId}`)
 
     if (data?.user) {
-      localStorage.setItem('aipm_user', JSON.stringify(data.user))
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('aipm_user', JSON.stringify(data.user))
+        userStore.currentUser = data.user;
+      }
       return data.user
     }
   } catch (err: any) {

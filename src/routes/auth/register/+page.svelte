@@ -1,7 +1,6 @@
 <script lang="ts">
   import { register } from '$lib/auth';
   import { goto } from '$app/navigation';
-  import { userStore } from '$lib/stores/user.svelte';
 
   let email = $state('');
   let username = $state('');
@@ -16,7 +15,7 @@
 
     try {
       await register(email, password, username);
-      await userStore.init();
+      // userStore is updated inside register -> saveSession
       goto('/');
     } catch (err: any) {
       error = err.message || 'Registration failed';

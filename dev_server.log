@@ -2,201 +2,25 @@
 > aipmui@0.0.1 dev /app
 > vite dev
 
-3:23:36 AM [vite] (client) Forced re-optimization of dependencies
+2:50:52 AM [vite] (client) Forced re-optimization of dependencies
 
-  VITE v7.3.1  ready in 1456 ms
+  VITE v7.3.1  ready in 1565 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
-3:24:43 AM [vite-plugin-svelte] src/routes/+layout.svelte:60:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+2:52:35 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
 https://svelte.dev/e/a11y_click_events_have_key_events
-3:24:43 AM [vite-plugin-svelte] src/routes/+layout.svelte:60:4 `<div>` with a click handler must have an ARIA role
+2:52:35 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 `<div>` with a click handler must have an ARIA role
 https://svelte.dev/e/a11y_no_static_element_interactions
-3:24:43 AM [vite-plugin-svelte] src/routes/+page.svelte:78:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+2:52:35 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
 https://svelte.dev/e/a11y_click_events_have_key_events
-3:24:43 AM [vite-plugin-svelte] src/routes/+page.svelte:78:6 `<div>` with a click handler must have an ARIA role
+2:52:35 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 `<div>` with a click handler must have an ARIA role
 https://svelte.dev/e/a11y_no_static_element_interactions
-3:24:43 AM [vite-plugin-svelte] src/routes/+page.svelte:120:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+2:52:37 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
 https://svelte.dev/e/a11y_click_events_have_key_events
-3:24:43 AM [vite-plugin-svelte] src/routes/+page.svelte:120:8 `<div>` with a click handler must have an ARIA role
+2:52:37 AM [vite-plugin-svelte] src/routes/+page.svelte:85:6 `<div>` with a click handler must have an ARIA role
 https://svelte.dev/e/a11y_no_static_element_interactions
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-3:27:44 AM [vite] (ssr) page reload src/routes/+layout.svelte
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-3:30:52 AM [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
-3:30:52 AM [vite] (ssr) page reload .svelte-kit/generated/root.svelte
-3:30:52 AM [vite] (ssr) page reload .svelte-kit/generated/root.js
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-3:33:06 AM [vite] (ssr) page reload src/routes/+layout.svelte
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-3:35:20 AM [vite] (ssr) page reload src/routes/+layout.svelte
-3:36:20 AM [vite] (ssr) page reload src/routes/+layout.svelte
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /settings[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-
-[1;31m[500] GET /[0m
-ReferenceError: props is not defined
-    at /app/src/routes/+layout.svelte:10:17
-    at Renderer.child (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:214:18)
-    at Renderer.component (node_modules/.pnpm/svelte@5.55.0/node_modules/svelte/src/internal/server/renderer.js:319:22)
-    at _layout (src/routes/+layout.svelte:25:13)
-svelte config changed, restarting vite dev-server. changed file: /app/svelte.config.js
-3:38:25 AM [vite] (client) Forced re-optimization of dependencies
-3:38:25 AM [vite] server restarted.
-3:38:57 AM [vite-plugin-svelte] src/routes/+page.svelte:78:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+2:52:37 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
 https://svelte.dev/e/a11y_click_events_have_key_events
-3:38:57 AM [vite-plugin-svelte] src/routes/+page.svelte:78:6 `<div>` with a click handler must have an ARIA role
-https://svelte.dev/e/a11y_no_static_element_interactions
-3:38:57 AM [vite-plugin-svelte] src/routes/+page.svelte:120:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
-https://svelte.dev/e/a11y_click_events_have_key_events
-3:38:57 AM [vite-plugin-svelte] src/routes/+page.svelte:120:8 `<div>` with a click handler must have an ARIA role
-https://svelte.dev/e/a11y_no_static_element_interactions
-3:38:58 AM [vite-plugin-svelte] src/routes/+page.svelte:78:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
-https://svelte.dev/e/a11y_click_events_have_key_events
-3:38:58 AM [vite-plugin-svelte] src/routes/+page.svelte:78:6 `<div>` with a click handler must have an ARIA role
-https://svelte.dev/e/a11y_no_static_element_interactions
-3:38:58 AM [vite-plugin-svelte] src/routes/+page.svelte:120:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
-https://svelte.dev/e/a11y_click_events_have_key_events
-3:38:58 AM [vite-plugin-svelte] src/routes/+page.svelte:120:8 `<div>` with a click handler must have an ARIA role
+2:52:37 AM [vite-plugin-svelte] src/routes/+page.svelte:127:8 `<div>` with a click handler must have an ARIA role
 https://svelte.dev/e/a11y_no_static_element_interactions
